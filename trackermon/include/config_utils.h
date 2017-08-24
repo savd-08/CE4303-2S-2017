@@ -1,7 +1,7 @@
 #ifndef _CONFIG_UTILS_H
 #define _CONFIG_UTILS_H
 
-#define CONFIG_FILE "config.conf"
+#define CONFIG_FILE "/etc/trackermon/config.conf"
 
 struct fs_data {
 	char id[32];
