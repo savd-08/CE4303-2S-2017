@@ -37,4 +37,8 @@ make
 sudo cp trackermon /usr/bin/
 sudo mkdir -p /etc/trackermon/
 sudo cp config.conf /etc/trackermon/
-echo " you can test command: /etc/init.d/trackermon start|stop|restart|status as root \n"
+echo " you can test command: /etc/init.d/trackermon start|stop|restart|status as root "
+ln -s /etc/init.d/trackermon /etc/rc5.d/S30trackermon
+ln -s /etc/init.d/trackermon /etc/rc5.d/S30trackermon
+ln -s /etc/init.d/trackermon /etc/rc6.d/K05trackermon
+ln -s /etc/init.d/trackermon /etc/rc0.d/K05trackermon
