@@ -29,6 +29,63 @@ int mem_usage(){
 	return mem_usage;
 }
 
+void sys_msg(char *msg, int msg_index){
+
+    //Variable declaration
+    FILE *fp;
+    char grep_cm[64];
+    char buf[8];
+
+    //itoa(fs_index, buf, 10);
+    sprintf(buf,"%d", msg_index);
+
+    //First part of the grep command to extract config params
+    strcpy(grep_cm,  "grep crit /var/log/syslog | awk 'NR==");
+    strcat(grep_cm, buf);
+    strcat(grep_cm, "{print}'");
+
+    //Getting the % from config file
+    fp = popen(grep_cm, "r");
+
+    //Exit on file failure
+    if (fp == NULL) {
+        printf("Could not open config file\n" );
+        exit(1);
+    }
+
+    //Reading the relevant command output as char*
+    fgets(msg, MSG_MAX_LEN, fp);
+
+    //Close the file
+    pclose(fp);
+
+}
+
+int crit_msg_amt(){
+
+    //Variable declaration
+    FILE *fp;
+    int msg_amt;
+
+    //Getting the % from config file
+    fp = popen("grep -c crit /var/log/syslog", "r");
+
+    //Exit on file failure
+    if (fp == NULL) {
+        printf("Could not open config file\n" );
+        exit(1);
+    }
+
+    //Reading the relevant command output as char*
+    fscanf(fp, "%d", &msg_amt);
+
+    //Close the file
+    pclose(fp);
+
+    return msg_amt;
+
+}
+
 int fs_usage(char* fs){
 
 	//Variable declaration

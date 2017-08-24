@@ -102,7 +102,7 @@ int load_fs(int fs_index, char *fs_id){
 	//Variable declaration
 	FILE *fp;
 	char grep_cm[64];
-	char buf[32];
+	char buf[8];
 	int fs_thresh;
 
 	//itoa(fs_index, buf, 10);
