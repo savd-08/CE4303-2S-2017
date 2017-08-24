@@ -28,7 +28,7 @@ fi
 
 echo "Instaling trackermon daemon"
 sleep 1
-sudo mv daemon/trackermon /etc/init.d/
+sudo cp daemon/trackermon /etc/init.d/
 echo "Creating file configuration to TrackerMon.. done "
 sudo chmod +x /etc/init.d/trackermon
 echo "Change permission"
