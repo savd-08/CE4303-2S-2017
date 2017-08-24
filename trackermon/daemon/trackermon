@@ -1,0 +1,49 @@
+#! /bin/sh
+ 
+NAME=trackermon
+DESC="TrackerMon monitors the CPU,Memory and Disk usage"
+PIDFILE="/var/run/${NAME}.pid"
+LOGFILE="/var/log/${NAME}.log"
+
+#Indicate the source file
+DAEMON="/usr/bin/trackermon"
+ 
+START_OPTS="--start --background --make-pidfile --pidfile ${PIDFILE} --exec ${DAEMON} "
+STOP_OPTS="--stop --pidfile ${PIDFILE}"
+ 
+case "$1" in
+    start)
+        echo -n "Starting $NAME "        
+        start-stop-daemon $START_OPTS >> $LOGFILE
+        echo "... done"
+        ;;
+    stop)
+        echo -n "Stopping $NAME "
+        start-stop-daemon $STOP_OPTS
+        echo "... done"
+        rm -f $PIDFILE
+        ;;
+    restart)
+        echo -n "Restarting $NAME "
+        start-stop-daemon $STOP_OPTS
+        sleep 2
+        start-stop-daemon $START_OPTS >> $LOGFILE
+        echo "... done"
+        ;;
+    status)
+	if test -f $PIDFILE ; then
+		echo -n "daemon: TrackerMon is running (pid $(pidof $NAME))\n"
+	else
+		echo -n "daemon: TrackerMon is not running \n"
+	fi
+	;;
+    *)
+        N=/etc/init.d/$NAME
+        echo "Usage: $N {start|stop|restart|status}" >&2
+        exit 1
+        ;;
+esac
+ 
+exit 0
+
+
