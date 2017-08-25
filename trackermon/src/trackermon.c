@@ -3,18 +3,63 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 int main(int argc, char *argv[]){
+	//Process ID and Session ID
+    pid_t process_id, sid;
+        
+    process_id = fork();
+
+    //Testing fork
+    if (process_id < 0) 
+	{
+            //Return exit failure
+            exit(1);
+    }
+
+    if (process_id > 0) 
+	{
+            //Return exit success to kill parent process
+            exit(0);
+    }
+
+    //Setting umask permission to 0
+    umask(0);
+            
+    //Create a new sesion to give independence to the daemon
+    sid = setsid();
+    if (sid < 0) 
+	{
+            //Exit on failure
+            exit(1);
+    }
+    
+    // Change the current working directory to root
+    chdir("/");
+    
+    //Close stdin, stdout and stderr for security purposes 
+    int fd0 = open("/dev/null", O_RDONLY);  // fd0 == 0
+    int fd1 = open("/dev/null", O_WRONLY);  // fd0 == 1
+    int fd2 = open("/dev/null", O_WRONLY);  // fd0 == 2
+
+    //Loading the log file location
+	char log_file[64] = {0};
+	load_logfile(log_file);
+
+	//Log file opened here    
+    FILE *lf = fopen(log_file, "w");   
+    
+	// Since we're not writing to the file yet we keep it closed
+	fclose(lf);
 
 	//Critial messages processed
 	int crit_proc = 0;
 
-	//Loading the log file location
-	char log_file[64] = {0};
-	load_logfile(log_file);
-
-	//File pointer
-	FILE *lf;
 
 	//Getting the amount of filesystems to monitor
 	int fs_amt = get_fs_amt();
