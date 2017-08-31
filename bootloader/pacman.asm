@@ -5,16 +5,11 @@
 
 ; Our bootloader jumped to 0x1000:0x0000 which sets CS=0x1000 and IP=0x0000
 ; We need to manually set the DS register so it can properly find our variables
-; like 'var'
-
 
 section .text
 
 xor ax, ax
 mov ds, ax 	; Copy CS to DS (we can't do it directly so we use AX temporarily)
-
-
-
  
 main:
 	mov ah, 0x00 	;Set video mode
@@ -209,112 +204,113 @@ get_input:
 	jmp ret_input
 
 move_up:
-	cmp dx, 10
+	cmp dx, 10		;Do not move if on top border
 	je get_input
-	pusha
-	add cx, 10
-	call check_col
-	sub dx, 10
+	pusha			;Push registers to the stack
+	add cx, 10		;Center the x axis for collision detection
+	call check_col	;Check if collision course
+	sub dx, 10		;Look 10 pixels ahead for pellets
 	call check_points
-	popa
-	call clear_pac
-	sub dx, 20
+	popa			;Pop registers from the stack
+	call clear_pac	;Clear the last pacman position
+	sub dx, 20		;Update the pacman_y value in memory
 	mov word [pacman_y], dx
-	call draw_pac
-	jmp ret_input
+	call draw_pac 	;Draw pacman in its new position
+	jmp ret_input	;Return to main loop
 
 move_down:
-	cmp dx, 170
-	je get_input
-	pusha
-	add cx, 10
-	add dx, 20
-	call check_col
-	add dx, 10
+	cmp dx, 170		;Do not move if on bottom border
+	je get_input	
+	pusha			;Push registers to the stack
+	add cx, 10		;Center the x axis for collision detection
+	add dx, 20		;Look 20 pixels ahead for collisions
+	call check_col	
+	add dx, 10		;Look 30 pixels ahead for pellets
 	call check_points
-	popa
-	call clear_pac
-	add dx, 20
+	popa			;Pop registers from the stack
+	call clear_pac	;Clear the last pacman position
+	add dx, 20		;Update the pacman_y value in memory
 	mov word [pacman_y], dx
-	call draw_pac
-	jmp ret_input
+	call draw_pac 	;Draw pacman in its new position
+	jmp ret_input	;Return to main loop
 
 move_left:
-	cmp cx, 0
+	cmp cx, 0		;Do not move if on left border
 	je get_input
-	pusha
-	add dx, 10
-	call check_col
-	sub cx, 10
+	pusha			;Push registers to the stack
+	add dx, 10		;Center the y axis for collision detection
+	call check_col 	;Check if collision course
+	sub cx, 10		;Look 10 pixels ahead for pellets
 	call check_points
-	popa
-	call clear_pac
-	sub cx, 20
+	popa			;Pop registers from the stack
+	call clear_pac	;Clear the last pacman position
+	sub cx, 20		;Update the pacman_y value in memory
 	mov word [pacman_x], cx
-	call draw_pac
-	jmp ret_input
+	call draw_pac 	;Draw pacman in its new position
+	jmp ret_input	;Return to main loop
 
 move_right:
-	cmp cx, 300
-	je get_input
-	pusha
-	add cx, 20
-	add dx, 10
-	call check_col
-	add cx, 9
+	cmp cx, 300		;Do not move if on right border
+	je get_input	
+	pusha			;Push registers to the stack
+	add cx, 20		;Look 20 pixels ahead for collisions
+	add dx, 10		;Center the y axis for collision detection
+	call check_col	
+	add cx, 9		;Look 9 pixels ahead for pellets
 	call check_points
-	popa
-	call clear_pac
-	add cx, 20
+	popa			;Pop registers from the stack
+	call clear_pac	;Clear the last pacman position
+	add cx, 20		;Update the pacman_y value in memory
 	mov word [pacman_x], cx
-	call draw_pac
-	jmp ret_input
+	call draw_pac 	;Draw pacman in its new position
+	jmp ret_input	;Return to main loop
 
 
 draw_pac:
-	pusha
-	mov byte [pacman_color], 0xe
+	pusha			;Push registers from the stack
+	mov byte [pacman_color], 0xe	;Setting yellow color for pacman
 	call draw_pac_c
-	popa
+	popa			;Pop registers from the stack
 	ret
 
 clear_pac:
-	pusha
-	mov byte [pacman_color], 0x0
+	pusha			;Push registers from the stack
+	mov byte [pacman_color], 0x0 	;Setting black color for pacman
 	call draw_pac_c
-	popa
+	popa			;Pop registers from the stack
 	ret
 
 check_col:
-	mov ah, 0x0d
-	mov bh, 0x0
-	int 0x10
-	cmp al, 0x8
+	mov ah, 0x0d	;Get graphics pixel video mode
+	mov bh, 0x0 	;Page 0
+	int 0x10 		;BIOS Video interrupt
+	cmp al, 0x8 	;If pixel is gray, collision
 	je get_input
 	ret
 
-check_points:
-	mov ah, 0x0d
-	mov bh, 0x0
-	int 0x10
-	cmp al, 0x6
-	je inc_points
+check_points:		
+	mov ah, 0x0d	;Get graphics pixel video mode
+	mov bh, 0x0 	;Page 0
+	int 0x10  		;BIOS Video interrupt
+	cmp al, 0x6 	;If pixel is brown, collision
+	je inc_points	;Increase points
 	ret
 
 inc_points:
-	pusha
-	mov ah, 0x0c
+	pusha			;Push registers from the stack
+	mov ah, 0x0c	;Drawing a "progress bar"
 	mov cx, [points]	
 	mov dx, 0
 	call draw_dot	
-	popa
-	inc word [points]
+	popa			;Push registers from the stack
+	inc word [points]	;Increment the points counter
 	ret
 
+;Game main loop
 game:
-	call get_input
-	ret_input:
-	cmp word [points], 71
+	call get_input		;Check for user input
+	ret_input:			
+	cmp word [points], 71	;Game ends when player eats all of the pellets
 	je halt
 	jmp game
 
