@@ -1,23 +1,33 @@
+ASM=nasm
+FLAGS= -f bin
+BL=bootloader
+SO=pacman
+COD=.asm
+BIN=.bin
+IMG=.img
+DD=dd
+ZERO=/dev/zero
+USB=/dev/sdb
 
-all: bootloader pacman image copy
+all: compile create_img save_usb
 
-#bootloader assembly generate bin
-bootloader: bootloader.asm
-	@nasm -f bin bootloader.asm -o bootloader.bin
-	@echo Bootloader bin generated
+compile:
+		$(ASM) $(FLAGS) $(BL)$(COD) -o $(BL)$(BIN)
+		$(ASM) $(FLAGS) $(SO)$(COD) -o $(SO)$(BIN)
 
-#pacman assembly generate bin
-pacman: pacman.asm 
-	@nasm -f bin pacman.asm -o pacman.bin
-	@echo pacman bin generated
+create_img:
+		$(DD) if=$(ZERO) of=$(SO)$(IMG) bs=1024 count=512
+		$(DD) if=$(BL)$(BIN) of=$(SO)$(IMG) conv=notrunc
+		$(DD) if=$(SO)$(BIN) of=$(SO)$(IMG) bs=512 seek=1 conv=notrunc
 
-#image to boot 
-image:
-	@dd if=/dev/zero of=pacman.img bs=1024 count=720
-	@echo Disk image created
+save_usb:
+		$(DD) if=$(SO)$(IMG) of=$(USB)
 
-#copy all files to create a final boot image
-copy: bootloader.bin pacman.img pacman.bin
-	@sudo dd if=bootloader.bin of=pacman.img conv=notrunc
-	@sudo dd if=pacman.bin of=pacman.img bs=512 seek=1 conv=notrunc
-	@echo All copies finished
+clean:
+		rm $(BL)$(BIN) $(SO)$(BIN) $(SO)$(IMG)
+
+help:
+	@echo "Execute using \"sudo make 'USB=/dev/sdX'\""
+	@echo "sudo used for load the pacman game in the USB drive"
+	@echo "the 'X' on the USB path may be changed with a correct letter on the system"
+	@echo "\nTry typing \"sudo fdisk -l\" on terminal to get the USB drive path"
