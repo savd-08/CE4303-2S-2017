@@ -1,36 +1,35 @@
-[bits 16]
-[ORG 0x7c00]		;0x07c00 is the physical address where the bootloader starts 
+[BITS 16]			; Tell nasm that we are running in real mode
+[ORG 0x7C00]    		; Bootloader starts at physical address 0x07c00
 
-jmp reset			;Jump to reset tag
-reset:          	;BIOS sets DL to boot drive before jumping to the bootloader
+init:
+	XOR AX, AX		; Reset value of register
+	MOV DS, AX  		; DS = 0
 
-    xor ax, ax		;Data Segment is set accordingly in primary accumulator (ax)
-    mov ds, ax      ;DS=0
+    	CLI        		; Turn off interrupts
 
-    cli              ;Disable interrupts, to avoid problem with CPU 8088 error
-                      	
-    mov ss, ax       ;SS=0x0000
-    mov sp, 0x7c00   ;SP=0x7c00 We'll set the stack starting just below
-                     	
-    sti              
+	MOV SS, AX 		; SS = 0x0000
+    	MOV SP, 0x7C00		; SP = 0x7c00
+                      
+    	STI          		; Turn on interrupts
 
-    xor ax,ax   	;0=Reset device disk
-    int 0x13
-    jc reset        ;Carry flag was set, try again
+    	XOR AX, AX   		; Reset value of register
+    	INT 0x13
+    	JC init        		; If failure, run init again
 
-    mov ax,0x1000   ;We are going to read address 0x1000
-    mov es,ax       ;Set ES with 0x1000
+    	MOV AX, 0x1000		; When we read the sector, we are going to read address 0x1000
+    	MOV ES, AX     		; Set ES with 0x1000
 
-device:
-    xor bx,bx   	;Ensure that the buffer offset is 0
-    mov ah,0x2  	;Read device=2
-    mov al,0x1  	;Reading one sector
-    mov ch,0x0  	;Track 1
-    mov cl,0x2  	;Sector 2, track 1
-    mov dh,0x0  	;Head 1
-    int 0x13
-    jc device   	;Carry flag was set, try again
-    jmp 0x1000:0000 ;Jump to 0x1000, start of the pacman game
+to_game:
+	XOR BX, BX   		; Reset value of register to ensure that the buffer offset is 0
+	MOV AH, 0x2  		; 2 = Read USB drive
+	MOV AL, 0x5  		; Read five sectors
+	MOV CH, 0x0  		; Track 1
+	MOV CL, 0x2  		; Sector 2, track 1
+	MOV DH, 0x0  		; Head 1
+	INT 0x13
+	JC to_game   		; If failure, run to_game again. 
 
-times 510-($-$$) db 0;Fill the rest of sector with 0
-dw 0xAA55   		;This is the boot signature
+	JMP 0x1000:0000 	; Jump to 0x1000, this is the start of the Pacman game
+
+TIMES 510 - ($ - $$) DB 0	; Fill the rest of the sector with zeros
+DW 0xAA55   			; Boot signature at the end

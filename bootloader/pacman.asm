@@ -7,8 +7,11 @@
 ; We need to manually set the DS register so it can properly find our variables
 ; like 'var'
 
-mov ax, cs
-mov ds, ax       ; Copy CS to DS (we can't do it directly so we use AX temporarily)
+
+section .text
+
+xor ax, ax
+mov ds, ax 	; Copy CS to DS (we can't do it directly so we use AX temporarily)
 
 
 
@@ -76,21 +79,13 @@ main:
 
 	mov word [pacman_x], 0
 	mov word [pacman_y], 10
-	mov word [index], 0
-
-	mov word ax, [index]
+	mov word [points], 0
 
 	mov word cx, [pacman_x]	;Set column (x) to 0
 	mov word dx, [pacman_y]	;Set row (y) to 0
-	mov byte [pacman_color], 0xe
-	pusha
 	call draw_pac
-	popa
 
-
-
-
-	jmp loop
+	jmp game
 
 draw_large_box:
 	pusha			;Push registers onto the stack
@@ -164,7 +159,7 @@ fill_dots_y:
 	add dx, 20		;Adds 45 to dx to get the required dots
 	jmp fill_dots_y	;Loops to itself
 
-draw_pac:
+draw_pac_c:
 	mov ah, 0x0c	;Write graphics pixel
 	add cx, 4		;X starting point
 	add dx, 9		;Y starting point
@@ -211,100 +206,125 @@ get_input:
 	je move_left
 	cmp ah, 0x50	;Jump if down arrow pressed
 	je move_down
-	jmp get_input
+	jmp ret_input
 
 move_up:
 	cmp dx, 10
 	je get_input
 	pusha
-	mov byte [pacman_color], 0x0
-	call draw_pac
+	add cx, 10
+	call check_col
+	sub dx, 10
+	call check_points
 	popa
+	call clear_pac
 	sub dx, 20
 	mov word [pacman_y], dx
-	pusha
-	mov byte [pacman_color], 0xe
 	call draw_pac
-	popa
-	ret
+	jmp ret_input
 
 move_down:
 	cmp dx, 170
 	je get_input
 	pusha
-	mov byte [pacman_color], 0x0
-	call draw_pac
+	add cx, 10
+	add dx, 20
+	call check_col
+	add dx, 10
+	call check_points
 	popa
+	call clear_pac
 	add dx, 20
 	mov word [pacman_y], dx
-	pusha
-	mov byte [pacman_color], 0xe
 	call draw_pac
-	popa
-	ret
+	jmp ret_input
 
 move_left:
 	cmp cx, 0
 	je get_input
 	pusha
-	mov byte [pacman_color], 0x0
-	call draw_pac
+	add dx, 10
+	call check_col
+	sub cx, 10
+	call check_points
 	popa
+	call clear_pac
 	sub cx, 20
 	mov word [pacman_x], cx
-	pusha
-	mov byte [pacman_color], 0xe
 	call draw_pac
-	popa
-	ret
+	jmp ret_input
 
 move_right:
 	cmp cx, 300
 	je get_input
-	mov word ax, [index]
-	inc ax
-	mov word bx, [pos_array + ax*4]
-	cmp bx, 2
-	je get_input
 	pusha
-	mov byte [pacman_color], 0x0
-	call draw_pac
+	add cx, 20
+	add dx, 10
+	call check_col
+	add cx, 9
+	call check_points
 	popa
+	call clear_pac
 	add cx, 20
 	mov word [pacman_x], cx
+	call draw_pac
+	jmp ret_input
+
+
+draw_pac:
 	pusha
 	mov byte [pacman_color], 0xe
-	call draw_pac
+	call draw_pac_c
 	popa
 	ret
 
-
-
-end:
-	inc cx
-
-loop:
+clear_pac:
 	pusha
-	call get_input
+	mov byte [pacman_color], 0x0
+	call draw_pac_c
 	popa
-	jmp loop
+	ret
+
+check_col:
+	mov ah, 0x0d
+	mov bh, 0x0
+	int 0x10
+	cmp al, 0x8
+	je get_input
+	ret
+
+check_points:
+	mov ah, 0x0d
+	mov bh, 0x0
+	int 0x10
+	cmp al, 0x6
+	je inc_points
+	ret
+
+inc_points:
+	pusha
+	mov ah, 0x0c
+	mov cx, [points]	
+	mov dx, 0
+	call draw_dot	
+	popa
+	inc word [points]
+	ret
+
+game:
+	call get_input
+	ret_input:
+	cmp word [points], 71
+	je halt
+	jmp game
+
+
+halt:
+	jmp halt
+
 
 section .bss
 	pacman_x	resw 1
 	pacman_y 	resw 1
-	index 		resw 1
 	pacman_color resb 1
-
-
-section .data
-
-	pos_array	db 0,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1
-				db 1,2,2,2, 2,1,2,2, 2,2,1,2, 2,2,2,1
-				db 1,2,2,2, 2,1,2,2, 2,2,1,2, 2,2,2,1
-				db 1,2,2,2, 2,1,2,2, 2,2,1,2, 2,2,2,1
-				db 1,2,2,2, 2,1,2,2, 2,2,1,2, 2,2,2,1
-				db 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1
-				db 1,2,2,2, 2,1,2,2, 2,2,1,2, 2,2,2,1
-				db 1,2,2,2, 2,1,2,2, 2,2,1,2, 2,2,2,1
-				db 1,2,2,2, 2,1,2,2, 2,2,1,2, 2,2,2,1
-				db 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1
+	points 		resw 1
