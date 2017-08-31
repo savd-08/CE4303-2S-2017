@@ -10,7 +10,7 @@ section .text
 
 xor ax, ax
 mov ds, ax 	; Copy CS to DS (we can't do it directly so we use AX temporarily)
- 
+
 main:
 	mov ah, 0x00 	;Set video mode
 	mov al, 0x13	;graphics, 320x200 res, 8x8 pixel box
@@ -71,6 +71,28 @@ main:
 	add cx, 100		;Set column (x) to 300
 	mov dx, 30		;Set row (y) to 20
 	call fill_dots_y
+
+  ;draw a car
+  mov word [car_x], 25        ;saves the car x coordinate
+  mov word [car_y], 14        ;saves the car y coordinate
+  mov al, 0x04                ;set the red color for the rectangle
+  call draw_car
+
+  ;draw a bus
+  mov word [bus_w], 20        ;saves the bus width
+  mov word [bus_h], 11        ;saves the bus height
+  mov word [bus_x], 45        ;saves the bus x coordinate
+  mov word [bus_y], 14        ;saves the bus y coordinate
+  mov al, 0x0C                ;set the red color for the rectangle
+  call draw_bus
+
+  ;draw a truck
+  mov word [truck_w], 30      ;saves the bus width
+  mov word [truck_h], 11      ;saves the bus height
+  mov word [truck_x], 85      ;saves the truck x coordinate
+  mov word [truck_y], 14      ;saves the truck y coordinate
+  mov al, 0x02                ;set the red color for the rectangle
+  call draw_truck
 
 	mov word [pacman_x], 0
 	mov word [pacman_y], 10
@@ -154,12 +176,77 @@ fill_dots_y:
 	add dx, 20		;Adds 45 to dx to get the required dots
 	jmp fill_dots_y	;Loops to itself
 
+draw_rectangle:
+	int 0x10										;draws the first pixel
+	;draws the top line
+	pusha												;saves the registers
+	mov word bx, [rectangle_w]	;gets the rectangle width
+	add bx, cx									;calculate the x boundary
+	call draw_line_x						;draws the line
+	popa												;resotores the registers
+	;draws the bottom line
+	pusha												;saves the registers
+	mov word bx, [rectangle_h] 	;gets the rectangle height
+	add dx, bx									;obtains the initial y for bottom line
+	int 0x10										;draws the first pixel
+	mov word bx, [rectangle_w]	;gets the rectangle width
+	add bx, cx									;calculate the x boundary
+	call draw_line_x						;draws the line
+	popa												;resotores the registers
+	;draws the left line
+	pusha												;saves the registers
+	mov word bx, [rectangle_h] 	;gets the rectangle height
+	add bx, dx									;obtains the y boundary
+	call draw_line_y						;draws the line
+	popa												;resotores the registers
+	;draws the right line
+	pusha												;saves the registers
+	mov word bx, [rectangle_w]	;gets the rectangle width
+	add cx, bx									;get the x for the right line
+	mov word bx, [rectangle_h] 	;gets the rectangle height
+	add bx, dx									;obtains the y boundary
+	call draw_line_y						;draws the line
+	popa												;resotores the registers
+	ret 												;return
+
+draw_car:
+  mov word [car_w], 10        ;saves the car width
+  mov word [car_h], 11        ;saves the car height
+  mov word bx, [car_w]        ;load the car width
+  mov word [rectangle_w], bx  ;saves the width for make a rectangle
+  mov word bx,[car_h]         ;loads the car height
+  mov word [rectangle_h], bx  ;saves the height for make a rectangle
+  mov word cx, [car_x]        ;set the initial x
+  mov word dx, [car_y]        ;set the initial y
+  call draw_rectangle
+  ret
+
+draw_bus:
+  mov word bx, [bus_w]        ;load the bus width
+  mov word [rectangle_w], bx  ;saves the width for make a rectangle
+  mov word bx,[bus_h]         ;loads the bus height
+  mov word [rectangle_h], bx  ;saves the height for make a rectangle
+  mov word cx, [bus_x]        ;set the initial x
+  mov word dx, [bus_y]        ;set the initial y
+  call draw_rectangle
+  ret
+
+draw_truck:
+  mov word bx, [truck_w]      ;load the bus width
+  mov word [rectangle_w], bx  ;saves the width for make a rectangle
+  mov word bx,[truck_h]       ;loads the bus height
+  mov word [rectangle_h], bx  ;saves the height for make a rectangle
+  mov word cx, [truck_x]      ;set the initial x
+  mov word dx, [truck_y]      ;set the initial y
+  call draw_rectangle
+  ret
+
 draw_pac_c:
 	mov ah, 0x0c	;Write graphics pixel
 	add cx, 4		;X starting point
 	add dx, 9		;Y starting point
 	mov bx, dx		;Move dx to bx
-	mov al, 0		;Set al to 0 
+	mov al, 0		;Set al to 0
 
 draw_pac_loop_l:
 	cmp al, 6		;Loop for 6 iterations
@@ -196,7 +283,7 @@ get_input:
 	cmp ah, 0x48	;Jump if up arrow pressed
 	je move_up
 	cmp ah, 0x4d	;Jump if right arrow pressed
-	je move_right		
+	je move_right
 	cmp ah, 0x4b	;Jump if left arrow pressed
 	je move_left
 	cmp ah, 0x50	;Jump if down arrow pressed
@@ -220,11 +307,11 @@ move_up:
 
 move_down:
 	cmp dx, 170		;Do not move if on bottom border
-	je get_input	
+	je get_input
 	pusha			;Push registers to the stack
 	add cx, 10		;Center the x axis for collision detection
 	add dx, 20		;Look 20 pixels ahead for collisions
-	call check_col	
+	call check_col
 	add dx, 10		;Look 30 pixels ahead for pellets
 	call check_points
 	popa			;Pop registers from the stack
@@ -251,11 +338,11 @@ move_left:
 
 move_right:
 	cmp cx, 300		;Do not move if on right border
-	je get_input	
+	je get_input
 	pusha			;Push registers to the stack
 	add cx, 20		;Look 20 pixels ahead for collisions
 	add dx, 10		;Center the y axis for collision detection
-	call check_col	
+	call check_col
 	add cx, 9		;Look 9 pixels ahead for pellets
 	call check_points
 	popa			;Pop registers from the stack
@@ -288,7 +375,7 @@ check_col:
 	je get_input
 	ret
 
-check_points:		
+check_points:
 	mov ah, 0x0d	;Get graphics pixel video mode
 	mov bh, 0x0 	;Page 0
 	int 0x10  		;BIOS Video interrupt
@@ -299,9 +386,9 @@ check_points:
 inc_points:
 	pusha			;Push registers from the stack
 	mov ah, 0x0c	;Drawing a "progress bar"
-	mov cx, [points]	
+	mov cx, [points]
 	mov dx, 0
-	call draw_dot	
+	call draw_dot
 	popa			;Push registers from the stack
 	inc word [points]	;Increment the points counter
 	ret
@@ -309,7 +396,7 @@ inc_points:
 ;Game main loop
 game:
 	call get_input		;Check for user input
-	ret_input:			
+	ret_input:
 	cmp word [points], 71	;Game ends when player eats all of the pellets
 	je halt
 	jmp game
@@ -324,3 +411,17 @@ section .bss
 	pacman_y 	resw 1
 	pacman_color resb 1
 	points 		resw 1
+  rectangle_w resw 1
+  rectangle_h resw 1
+  car_x resw 1
+  car_y resw 1
+  bus_x resw 1
+  bus_y resw 1
+  truck_x resw 1
+  truck_y resw 1
+  car_w resw 1
+  car_h resw 1
+  bus_w resw 1
+  bus_h resw 1
+  truck_w resw 1
+  truck_h resw 1
