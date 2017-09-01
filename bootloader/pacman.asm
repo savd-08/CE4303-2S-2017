@@ -72,34 +72,34 @@ main:
 	mov dx, 30		;Set row (y) to 20
 	call fill_dots_y
 
-  ;draw a car
-  mov word [car_x], 25        ;saves the car x coordinate
-  mov word [car_y], 14        ;saves the car y coordinate
-  mov al, 0x04                ;set the red color for the rectangle
-  call draw_car
+	;draw a car
+	mov word [car_x], 25        ;saves the car x coordinate
+	mov word [car_y], 14        ;saves the car y coordinate
+	mov al, 0x04                ;set the red color for the rectangle
+	call draw_car
 
-  ;draw a bus
-  mov word [bus_w], 20        ;saves the bus width
-  mov word [bus_h], 11        ;saves the bus height
-  mov word [bus_x], 45        ;saves the bus x coordinate
-  mov word [bus_y], 14        ;saves the bus y coordinate
-  mov al, 0x0C                ;set the red color for the rectangle
-  call draw_bus
+	;draw a bus
+	mov word [bus_w], 20        ;saves the bus width
+	mov word [bus_h], 11        ;saves the bus height
+	mov word [bus_x], 45        ;saves the bus x coordinate
+	mov word [bus_y], 14        ;saves the bus y coordinate
+	mov al, 0x0C                ;set the red color for the rectangle
+	call draw_bus
 
-  ;draw a truck
-  mov word [truck_w], 30      ;saves the bus width
-  mov word [truck_h], 11      ;saves the bus height
-  mov word [truck_x], 85      ;saves the truck x coordinate
-  mov word [truck_y], 14      ;saves the truck y coordinate
-  mov al, 0x02                ;set the red color for the rectangle
-  call draw_truck
+	;draw a truck
+	mov word [truck_w], 30      ;saves the bus width
+	mov word [truck_h], 11      ;saves the bus height
+	mov word [truck_x], 85      ;saves the truck x coordinate
+	mov word [truck_y], 14      ;saves the truck y coordinate
+	mov al, 0x02                ;set the red color for the rectangle
+	call draw_truck
 
 	mov word [pacman_x], 0
 	mov word [pacman_y], 10
 	mov word [points], 0
 
-	mov word cx, [pacman_x]	;Set column (x) to 0
-	mov word dx, [pacman_y]	;Set row (y) to 0
+	mov word cx, [pacman_x]	
+	mov word dx, [pacman_y]	
 	call draw_pac
 
 	jmp game
@@ -210,36 +210,36 @@ draw_rectangle:
 	ret 												;return
 
 draw_car:
-  mov word [car_w], 10        ;saves the car width
-  mov word [car_h], 11        ;saves the car height
-  mov word bx, [car_w]        ;load the car width
-  mov word [rectangle_w], bx  ;saves the width for make a rectangle
-  mov word bx,[car_h]         ;loads the car height
-  mov word [rectangle_h], bx  ;saves the height for make a rectangle
-  mov word cx, [car_x]        ;set the initial x
-  mov word dx, [car_y]        ;set the initial y
-  call draw_rectangle
-  ret
+	mov word [car_w], 10        ;saves the car width
+	mov word [car_h], 11        ;saves the car height
+	mov word bx, [car_w]        ;load the car width
+	mov word [rectangle_w], bx  ;saves the width for make a rectangle
+	mov word bx,[car_h]         ;loads the car height
+	mov word [rectangle_h], bx  ;saves the height for make a rectangle
+	mov word cx, [car_x]        ;set the initial x
+	mov word dx, [car_y]        ;set the initial y
+	call draw_rectangle
+	ret
 
 draw_bus:
-  mov word bx, [bus_w]        ;load the bus width
-  mov word [rectangle_w], bx  ;saves the width for make a rectangle
-  mov word bx,[bus_h]         ;loads the bus height
-  mov word [rectangle_h], bx  ;saves the height for make a rectangle
-  mov word cx, [bus_x]        ;set the initial x
-  mov word dx, [bus_y]        ;set the initial y
-  call draw_rectangle
-  ret
+	mov word bx, [bus_w]        ;load the bus width
+	mov word [rectangle_w], bx  ;saves the width for make a rectangle
+	mov word bx,[bus_h]         ;loads the bus height
+	mov word [rectangle_h], bx  ;saves the height for make a rectangle
+	mov word cx, [bus_x]        ;set the initial x
+	mov word dx, [bus_y]        ;set the initial y
+	call draw_rectangle
+	ret
 
 draw_truck:
-  mov word bx, [truck_w]      ;load the bus width
-  mov word [rectangle_w], bx  ;saves the width for make a rectangle
-  mov word bx,[truck_h]       ;loads the bus height
-  mov word [rectangle_h], bx  ;saves the height for make a rectangle
-  mov word cx, [truck_x]      ;set the initial x
-  mov word dx, [truck_y]      ;set the initial y
-  call draw_rectangle
-  ret
+	mov word bx, [truck_w]      ;load the bus width
+	mov word [rectangle_w], bx  ;saves the width for make a rectangle
+	mov word bx,[truck_h]       ;loads the bus height
+	mov word [rectangle_h], bx  ;saves the height for make a rectangle
+	mov word cx, [truck_x]      ;set the initial x
+	mov word dx, [truck_y]      ;set the initial y
+	call draw_rectangle
+	ret
 
 draw_pac_c:
 	mov ah, 0x0c	;Write graphics pixel
@@ -393,8 +393,34 @@ inc_points:
 	inc word [points]	;Increment the points counter
 	ret
 
+pac_col:
+	mov ah, 0x0d	;Get graphics pixel video mode
+	mov bh, 0x0 	;Page 0
+	int 0x10  		;BIOS Video interrupt
+	cmp al, 0xe 	;If pixel is not yellow, collision
+	je halt
+	ret
+
+check_pac:
+	mov word cx, [pacman_x]	
+	mov word dx, [pacman_y]
+	add cx, 25
+	add dx, 9
+	call pac_col
+	add cx, 5
+	add dx, 5
+	call pac_col
+	sub dx, 9
+	call pac_col
+	add cx, 5
+	add dx, 5
+	call pac_col
+	ret
+
+
 ;Game main loop
 game:
+	call check_pac
 	call get_input		;Check for user input
 	ret_input:
 	cmp word [points], 71	;Game ends when player eats all of the pellets
@@ -411,17 +437,17 @@ section .bss
 	pacman_y 	resw 1
 	pacman_color resb 1
 	points 		resw 1
-  rectangle_w resw 1
-  rectangle_h resw 1
-  car_x resw 1
-  car_y resw 1
-  bus_x resw 1
-  bus_y resw 1
-  truck_x resw 1
-  truck_y resw 1
-  car_w resw 1
-  car_h resw 1
-  bus_w resw 1
-  bus_h resw 1
-  truck_w resw 1
-  truck_h resw 1
+	rectangle_w resw 1
+	rectangle_h resw 1
+	car_x resw 1
+	car_y resw 1
+	bus_x resw 1
+	bus_y resw 1
+	truck_x resw 1
+	truck_y resw 1
+	car_w resw 1
+	car_h resw 1
+	bus_w resw 1
+	bus_h resw 1
+	truck_w resw 1
+	truck_h resw 1
