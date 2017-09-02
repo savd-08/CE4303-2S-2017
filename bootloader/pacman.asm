@@ -478,6 +478,10 @@ msg_loop:
 
 ;Halt execution
 halt:
+	mov ah, 0		;Set ah to 0
+	int 0x16		;Get keystroke interrupt
+	cmp ah, 0x1c	;Restart if enter arrow pressed
+	je main
 	jmp halt
 
 section .data
