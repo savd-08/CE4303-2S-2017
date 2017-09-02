@@ -6,10 +6,8 @@
 ; Our bootloader jumped to 0x1000:0x0000 which sets CS=0x1000 and IP=0x0000
 ; We need to manually set the DS register so it can properly find our variables
 
-section .text
-
-xor ax, ax
-mov ds, ax 	; Copy CS to DS (we can't do it directly so we use AX temporarily)
+mov ax, cs
+mov ds, ax   	; Copy CS to DS (we can't do it directly so we use AX temporarily)
 
 main:
 	mov ah, 0x00 	;Set video mode
@@ -94,16 +92,17 @@ main:
 	mov al, 0x02                ;set the red color for the rectangle
 	call draw_truck
 
-	mov word [pacman_x], 0
-	mov word [pacman_y], 10
-	mov word [points], 0
+	mov word [pacman_x], 0	;Loading starting position
+	mov word [pacman_y], 10	
+	mov word [points], 0	;Clearing points
 
-	mov word cx, [pacman_x]	
+	mov word cx, [pacman_x]	;Drawing pacman in its starting position
 	mov word dx, [pacman_y]	
 	call draw_pac
 
-	jmp game
+	jmp game 			;Game main loop
 
+;Drawing a large box
 draw_large_box:
 	pusha			;Push registers onto the stack
 	int 0x10		;Draw initial pixel
@@ -162,6 +161,7 @@ draw_dot:
 	popa
 	ret
 
+;Put pellets on a row
 fill_dots_x:
 	cmp cx, 300		;Compare if currrent x is greater than the desired x
 	jg return 		;Returns if true
@@ -169,6 +169,7 @@ fill_dots_x:
 	add cx, 20		;Adds 32 to cx to get the required dots
 	jmp fill_dots_x	;Loops to itself
 
+;Put pellets on a column
 fill_dots_y:
 	cmp dx, 170		;Compare if currrent y is greater than the desired y
 	jg return 		;Returns if true
@@ -176,6 +177,7 @@ fill_dots_y:
 	add dx, 20		;Adds 45 to dx to get the required dots
 	jmp fill_dots_y	;Loops to itself
 
+;Draws a rectangle given its width and height
 draw_rectangle:
 	int 0x10										;draws the first pixel
 	;draws the top line
@@ -209,6 +211,7 @@ draw_rectangle:
 	popa												;resotores the registers
 	ret 												;return
 
+;Draws a car
 draw_car:
 	mov word [car_w], 10        ;saves the car width
 	mov word [car_h], 11        ;saves the car height
@@ -221,6 +224,7 @@ draw_car:
 	call draw_rectangle
 	ret
 
+;Draws a bus
 draw_bus:
 	mov word bx, [bus_w]        ;load the bus width
 	mov word [rectangle_w], bx  ;saves the width for make a rectangle
@@ -231,6 +235,7 @@ draw_bus:
 	call draw_rectangle
 	ret
 
+;Draws a truck
 draw_truck:
 	mov word bx, [truck_w]      ;load the bus width
 	mov word [rectangle_w], bx  ;saves the width for make a rectangle
@@ -241,6 +246,7 @@ draw_truck:
 	call draw_rectangle
 	ret
 
+;Draws pacman given its color
 draw_pac_c:
 	mov ah, 0x0c	;Write graphics pixel
 	add cx, 4		;X starting point
@@ -248,6 +254,7 @@ draw_pac_c:
 	mov bx, dx		;Move dx to bx
 	mov al, 0		;Set al to 0
 
+;Draws the left half of the character
 draw_pac_loop_l:
 	cmp al, 6		;Loop for 6 iterations
 	je draw_pac_loop_r
@@ -261,6 +268,7 @@ draw_pac_loop_l:
 	inc al			;Increment al
 	jmp draw_pac_loop_l		;Loop to itself
 
+;Draws the right half of the character
 draw_pac_loop_r:
 	cmp al, 0		;Loop for 6 iterations
 	je return
@@ -274,7 +282,7 @@ draw_pac_loop_r:
 	dec al			;Decrement al
 	jmp draw_pac_loop_r		;Loop to itself
 
-
+;Checks for user input
 get_input:
 	mov ah, 0		;Set ah to 0
 	int 0x16		;Get keystroke interrupt
@@ -290,6 +298,7 @@ get_input:
 	je move_down
 	jmp ret_input
 
+;Actions taken when the up key is pressed
 move_up:
 	cmp dx, 10		;Do not move if on top border
 	je get_input
@@ -305,6 +314,7 @@ move_up:
 	call draw_pac 	;Draw pacman in its new position
 	jmp ret_input	;Return to main loop
 
+;Actions taken when the down key is pressed
 move_down:
 	cmp dx, 170		;Do not move if on bottom border
 	je get_input
@@ -321,6 +331,7 @@ move_down:
 	call draw_pac 	;Draw pacman in its new position
 	jmp ret_input	;Return to main loop
 
+;Actions taken when the left key is pressed
 move_left:
 	cmp cx, 0		;Do not move if on left border
 	je get_input
@@ -336,6 +347,7 @@ move_left:
 	call draw_pac 	;Draw pacman in its new position
 	jmp ret_input	;Return to main loop
 
+;Actions taken when the right key is pressed
 move_right:
 	cmp cx, 300		;Do not move if on right border
 	je get_input
@@ -352,7 +364,7 @@ move_right:
 	call draw_pac 	;Draw pacman in its new position
 	jmp ret_input	;Return to main loop
 
-
+;Draws a yellow pacman
 draw_pac:
 	pusha			;Push registers from the stack
 	mov byte [pacman_color], 0xe	;Setting yellow color for pacman
@@ -360,6 +372,7 @@ draw_pac:
 	popa			;Pop registers from the stack
 	ret
 
+;Clears pacman (black color)
 clear_pac:
 	pusha			;Push registers from the stack
 	mov byte [pacman_color], 0x0 	;Setting black color for pacman
@@ -367,6 +380,7 @@ clear_pac:
 	popa			;Pop registers from the stack
 	ret
 
+;Check for collisions on a given coordinate
 check_col:
 	mov ah, 0x0d	;Get graphics pixel video mode
 	mov bh, 0x0 	;Page 0
@@ -375,6 +389,7 @@ check_col:
 	je get_input
 	ret
 
+;Check for pellets on a given coordinate
 check_points:
 	mov ah, 0x0d	;Get graphics pixel video mode
 	mov bh, 0x0 	;Page 0
@@ -383,6 +398,7 @@ check_points:
 	je inc_points	;Increase points
 	ret
 
+;Increases points and draws a progress bar
 inc_points:
 	pusha			;Push registers from the stack
 	mov ah, 0x0c	;Drawing a "progress bar"
@@ -393,30 +409,31 @@ inc_points:
 	inc word [points]	;Increment the points counter
 	ret
 
+;Check if a given pacman pixel has been cleared
 pac_col:
 	mov ah, 0x0d	;Get graphics pixel video mode
 	mov bh, 0x0 	;Page 0
 	int 0x10  		;BIOS Video interrupt
 	cmp al, 0xe 	;If pixel is not yellow, collision
-	je halt
+	jne defeat
 	ret
 
+;Check all pacman sides for a collision
 check_pac:
-	mov word cx, [pacman_x]	
+	mov word cx, [pacman_x]	;Get current pacman coordinates
 	mov word dx, [pacman_y]
-	add cx, 25
+	add cx, 5		;Add an offset for graphics comparison
 	add dx, 9
-	call pac_col
-	add cx, 5
+	call pac_col 	;Check for collisions
+	add cx, 5		;Add an offset for graphics comparison
 	add dx, 5
-	call pac_col
-	sub dx, 9
-	call pac_col
-	add cx, 5
+	call pac_col 	;Check for collisions
+	sub dx, 9		;Add an offset for graphics comparison
+	call pac_col 	;Check for collisions
+	add cx, 5		;Add an offset for graphics comparison
 	add dx, 5
-	call pac_col
+	call pac_col 	;Check for collisions
 	ret
-
 
 ;Game main loop
 game:
@@ -424,13 +441,48 @@ game:
 	call get_input		;Check for user input
 	ret_input:
 	cmp word [points], 71	;Game ends when player eats all of the pellets
-	je halt
+	je victory
 	jmp game
 
+;Print a green victory message
+victory:
+	mov si, v_msg
+	mov bl, 2   ;Set green color
+	jmp print_msg
 
+;Print a red defeat message
+defeat:
+	mov si, go_msg
+	mov bl, 4   	;Set red color
+	jmp print_msg
+
+;Print a message given its color
+print_msg:
+	mov bh, 0   ;Set page 0
+	mov cx, 1	;Set number of times
+	mov dh, 12	;Set char print row
+	mov dl, 16	;Set char print column
+
+msg_loop:
+	mov ah, 0x2	;Set cursor position interrupt
+	int 10h
+	
+	lodsb		;Move si pointer contents to al
+	or al, al	;Break if end of string
+	jz halt
+
+	mov ah, 0xa	;Teletype output interrupt
+	int 10h		;
+	inc dl		;Increment column index
+	jmp msg_loop	;Loop to itself
+
+;Halt execution
 halt:
 	jmp halt
 
+section .data
+	v_msg	db 'You win!', 0
+	go_msg	db 'Game Over', 0
 
 section .bss
 	pacman_x	resw 1
