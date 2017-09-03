@@ -100,6 +100,10 @@ main:
 	mov word dx, [pacman_y]	
 	call draw_pac
 
+	;mov ax, 0x0305
+	;mov bx, 0x021f
+	;int 0x16
+
 	jmp game 			;Game main loop
 
 ;Drawing a large box
@@ -284,7 +288,10 @@ draw_pac_loop_r:
 
 ;Checks for user input
 get_input:
-	mov ah, 0		;Set ah to 0
+	mov ah, 0x1		;Set ah to 1
+	int 0x16		;Check keystroke interrupt
+	jz ret_input	;Return if no keystroke
+	mov ah, 0x0		;Set ah to 1
 	int 0x16		;Get keystroke interrupt
 	mov word cx, [pacman_x]
 	mov word dx, [pacman_y]
@@ -437,12 +444,17 @@ check_pac:
 
 ;Game main loop
 game:
+	;--------------------------MOVE ENEMIES-------------------------------
 	call check_pac
-	call get_input		;Check for user input
+	call get_input	;Check for user input
 	ret_input:
 	cmp word [points], 71	;Game ends when player eats all of the pellets
 	je victory
-	jmp game
+	mov cx, 0x01 	;Delay for 100ms
+	mov dx, 0x86a0
+	mov ah, 0x86
+	int 0x15
+	jmp game 		;Loop to itself
 
 ;Print a green victory message
 victory:
