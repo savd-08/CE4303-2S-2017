@@ -71,33 +71,34 @@ main:
 	call fill_dots_y
 
 	;draw a car
-	mov word [car_x], 25        ;saves the car x coordinate
-	mov word [car_y], 14        ;saves the car y coordinate
+	mov word [car_vx], 1
+	mov word [car_x], 5        ;saves the car x coordinate
+	mov word [car_y], 174        ;saves the car y coordinate
 	mov al, 0x04                ;set the red color for the rectangle
 	call draw_car
 
 	;draw a bus
-	mov word [bus_w], 20        ;saves the bus width
-	mov word [bus_h], 11        ;saves the bus height
-	mov word [bus_x], 45        ;saves the bus x coordinate
-	mov word [bus_y], 14        ;saves the bus y coordinate
-	mov al, 0x0C                ;set the red color for the rectangle
-	call draw_bus
+	;mov word [bus_w], 20        ;saves the bus width
+	;mov word [bus_h], 11        ;saves the bus height
+	;mov word [bus_x], 45        ;saves the bus x coordinate
+	;mov word [bus_y], 14        ;saves the bus y coordinate
+	;mov al, 0x0C                ;set the red color for the rectangle
+	;call draw_bus
 
 	;draw a truck
-	mov word [truck_w], 30      ;saves the bus width
-	mov word [truck_h], 11      ;saves the bus height
-	mov word [truck_x], 85      ;saves the truck x coordinate
-	mov word [truck_y], 14      ;saves the truck y coordinate
-	mov al, 0x02                ;set the red color for the rectangle
-	call draw_truck
+	;mov word [truck_w], 30      ;saves the bus width
+	;mov word [truck_h], 11      ;saves the bus height
+	;mov word [truck_x], 85      ;saves the truck x coordinate
+	;mov word [truck_y], 14      ;saves the truck y coordinate
+	;mov al, 0x02                ;set the red color for the rectangle
+	;call draw_truck
 
 	mov word [pacman_x], 0	;Loading starting position
-	mov word [pacman_y], 10	
+	mov word [pacman_y], 10
 	mov word [points], 0	;Clearing points
 
 	mov word cx, [pacman_x]	;Drawing pacman in its starting position
-	mov word dx, [pacman_y]	
+	mov word dx, [pacman_y]
 	call draw_pac
 
 	;mov ax, 0x0305
@@ -183,6 +184,7 @@ fill_dots_y:
 
 ;Draws a rectangle given its width and height
 draw_rectangle:
+	mov ah, 0x0c								;Write graphics pixel
 	int 0x10										;draws the first pixel
 	;draws the top line
 	pusha												;saves the registers
@@ -442,10 +444,71 @@ check_pac:
 	call pac_col 	;Check for collisions
 	ret
 
+move_car:
+	;espera 0.5 segundos
+	pusha
+	mov cx, 0x0007
+	mov dx, 0xA102
+	mov ah, 0x86
+	int 0x15
+	popa
+	;validate the direction vector
+	mov word bx, [car_vx]	;loads the direction vector
+	cmp bx, 0
+	jg move_car_right
+	je move_car_left
+
+	move_car_right:
+	  mov word cx, [car_x] 	;obtiene la coordenada x
+		cmp cx, 300						;checks the boundary in x
+		jg car_turnl					;changes the vector
+		;erase the car
+		pusha
+		mov al, 0x00    			;set the black color for the car
+		call draw_car
+		popa
+		;move the car to the right
+		add cx, 20
+		mov word [car_x], cx
+		mov al, 0x04    			;set the black color for the car
+		pusha
+		call draw_car
+		popa
+		jmp get_input
+
+	car_turnl:
+		mov bx, 0
+		mov word [car_vx], bx
+		jmp get_input
+
+	move_car_left:
+		mov word cx, [car_x]	;obtiene la coordenada x
+		cmp cx, 5							;checks the boundary in x
+		jle car_turnr					;changes the vector
+		;erase the car
+		pusha
+		mov al, 0x00    			;set the black color for the car
+		call draw_car
+		popa
+		;move the car to the left
+		sub cx, 20
+		mov word [car_x], cx
+		mov al, 0x04    	;set the black color for the car
+		pusha
+		call draw_car
+		popa
+		jmp get_input
+
+	car_turnr:
+		mov bx, 1
+		mov word [car_vx], bx
+		jmp get_input
+
 ;Game main loop
 game:
 	;--------------------------MOVE ENEMIES-------------------------------
 	call check_pac
+	;call move_car
 	call get_input	;Check for user input
 	ret_input:
 	cmp word [points], 71	;Game ends when player eats all of the pellets
@@ -478,7 +541,7 @@ print_msg:
 msg_loop:
 	mov ah, 0x2	;Set cursor position interrupt
 	int 10h
-	
+
 	lodsb		;Move si pointer contents to al
 	or al, al	;Break if end of string
 	jz halt
@@ -519,3 +582,5 @@ section .bss
 	bus_h resw 1
 	truck_w resw 1
 	truck_h resw 1
+	car_vx resw 1
+	car_vy resw 1
