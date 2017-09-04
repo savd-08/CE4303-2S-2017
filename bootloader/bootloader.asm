@@ -9,7 +9,7 @@ init:
 
 	MOV SS, AX 		; SS = 0x0000
     	MOV SP, 0x7C00		; SP = 0x7c00
-                      
+
     	STI          		; Turn on interrupts
 
     	XOR AX, AX   		; Reset value of register
@@ -22,12 +22,12 @@ init:
 to_game:
 	XOR BX, BX   		; Reset value of register to ensure that the buffer offset is 0
 	MOV AH, 0x2  		; 2 = Read USB drive
-	MOV AL, 0x5  		; Read five sectors
+	MOV AL, 0x8  		; Read five sectors
 	MOV CH, 0x0  		; Track 1
 	MOV CL, 0x2  		; Sector 2, track 1
 	MOV DH, 0x0  		; Head 1
 	INT 0x13
-	JC to_game   		; If failure, run to_game again. 
+	JC to_game   		; If failure, run to_game again.
 
 	JMP 0x1000:0000 	; Jump to 0x1000, this is the start of the Pacman game
 
