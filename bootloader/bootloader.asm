@@ -22,7 +22,7 @@ init:
 to_game:
 	XOR BX, BX   		; Reset value of register to ensure that the buffer offset is 0
 	MOV AH, 0x2  		; 2 = Read USB drive
-	MOV AL, 0x8  		; Read five sectors
+	MOV AL, 0x8  		; Read eight sectors
 	MOV CH, 0x0  		; Track 1
 	MOV CL, 0x2  		; Sector 2, track 1
 	MOV DH, 0x0  		; Head 1
