@@ -72,8 +72,9 @@ main:
 
 	;draw a car
 	mov word [car_vx], 1
-	mov word [car_x], 5        ;saves the car x coordinate
-	mov word [car_y], 174        ;saves the car y coordinate
+	mov word [car_vy], 0
+	mov word [car_x], 25        ;saves the car x coordinate
+	mov word [car_y], 14        ;saves the car y coordinate
 	mov al, 0x04                ;set the red color for the rectangle
 	call draw_car
 
@@ -452,64 +453,147 @@ move_car:
 	mov ah, 0x86
 	int 0x15
 	popa
-	;validate the direction vector
-	mov word bx, [car_vx]	;loads the direction vector
+	;validate the horizontal vector
+	mov word bx, [car_vx]	;loads the horizontal vector
 	cmp bx, 0
 	jg move_car_right
-	je move_car_left
+	jl move_car_left
+	;validate the vertical vector
+	mov word bx, [car_vy] ;loads the vertical vector
+	cmp bx, 0
+	jg move_car_down
+	jl move_car_up
 
 	move_car_right:
-	  mov word cx, [car_x] 	;obtiene la coordenada x
-		cmp cx, 300						;checks the boundary in x
-		jg car_turnl					;changes the vector
+	  mov word cx, [car_x]	;loads the x component
+		mov word dx, [car_y]	;loads the y component
+		cmp cx, 305						;compare with the x boundary
+		jge car_turn_u_d_desc	;decides if go up or down
 		;erase the car
 		pusha
 		mov al, 0x00    			;set the black color for the car
 		call draw_car
 		popa
-		;move the car to the right
+		;move car towards right
 		add cx, 20
 		mov word [car_x], cx
-		mov al, 0x04    			;set the black color for the car
+		mov al, 0x04					;set red color
 		pusha
 		call draw_car
 		popa
-		jmp get_input
-
-	car_turnl:
-		mov bx, 0
-		mov word [car_vx], bx
 		jmp get_input
 
 	move_car_left:
-		mov word cx, [car_x]	;obtiene la coordenada x
-		cmp cx, 5							;checks the boundary in x
-		jle car_turnr					;changes the vector
+		mov word cx, [car_x]	;loads the x component
+		mov word dx, [car_y]	;loads the y component
+		cmp cx, 5							;compare with the x boundary
+		jle car_turn_u_d_desc	;decides if go up or down
 		;erase the car
 		pusha
 		mov al, 0x00    			;set the black color for the car
 		call draw_car
 		popa
-		;move the car to the left
+		;move the car towards left
 		sub cx, 20
 		mov word [car_x], cx
-		mov al, 0x04    	;set the black color for the car
+		mov al, 0x04    			;set the red color
 		pusha
 		call draw_car
 		popa
 		jmp get_input
 
-	car_turnr:
-		mov bx, 1
-		mov word [car_vx], bx
+	car_turn_u_d_desc:
+		cmp dx, 14
+		je car_turn_d	;turns the car down
+		cmp dx, 174
+		je car_turn_u	;turn the car up
+		car_turn_d:
+			;cancels the x movement
+			mov bx, 0
+			mov word [car_vx], bx
+			;turns the car down
+			mov bx, 1
+			mov word [car_vy], bx
+			;move to the new direction
+			jmp move_car
+		car_turn_u:
+			;cancels the x movement
+			mov bx, 0
+			mov word [car_vx], bx
+			;turns the car up
+			mov bx, -1
+			mov word [car_vy], bx
+			;move to the new direction
+			jmp move_car
+
+	move_car_down:
+		mov word cx, [car_x]	;loads the x component
+		mov word dx, [car_y]	;loads the y component
+		cmp dx, 174
+		jge car_turn_r_l_desc
+		;erase the car
+		pusha
+		mov al, 0x00    			;set the black color for the car
+		call draw_car
+		popa
+		;move car down
+		add dx, 20
+		mov word [car_y], dx
+		mov al, 0x04					;set red color
+		pusha
+		call draw_car
+		popa
 		jmp get_input
+
+	move_car_up:
+		mov word cx, [car_x]	;loads the x component
+		mov word dx, [car_y]	;loads the y component
+		cmp dx, 14
+		jle car_turn_r_l_desc
+		;erase the car
+		pusha
+		mov al, 0x00    			;set the black color for the car
+		call draw_car
+		popa
+		;move car down
+		sub dx, 20
+		mov word [car_y], dx
+		mov al, 0x04					;set red color
+		pusha
+		call draw_car
+		popa
+		jmp get_input
+
+	car_turn_r_l_desc:
+		cmp cx, 5
+		je car_turn_r
+		cmp cx, 305
+		je car_turn_l
+		car_turn_r:
+			;cancels the vertical movement
+			mov bx, 0
+			mov word [car_vy], bx
+			;turn the car to the right
+			mov bx, 1
+			mov word [car_vx], bx
+			;move to the new direction
+			jmp move_car
+		car_turn_l:
+			;cancels the vertical movement
+			mov bx, 0
+			mov word [car_vy], bx
+			;turn the car to the right
+			mov bx, -1
+			mov word [car_vx], bx
+			;move to the new direction
+			jmp move_car
 
 ;Game main loop
 game:
 	;--------------------------MOVE ENEMIES-------------------------------
 	call check_pac
-	;call move_car
-	call get_input	;Check for user input
+	call move_car
+	;call get_input	;Check for user input
 	ret_input:
 	cmp word [points], 71	;Game ends when player eats all of the pellets
 	je victory
