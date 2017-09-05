@@ -683,11 +683,11 @@ move_car:
 		move_bus_right:
 		  mov word cx, [bus_x]	;loads the x component
 			mov word dx, [bus_y]	;loads the y component
-			cmp cx, 305						;compare with the x boundary
-			jge bus_turn_u_d_desc	;decides if go up or down
-			cmp cx, 105
+			cmp cx, 285						;compare with the x boundary
+			jge bus_turn_u_d_desc_r	;decides if go up or down
+			cmp cx, 85
 			je bus_random_u_d_r
-			cmp cx, 205
+			cmp cx, 185
 			je bus_random_u_d_r
 			bus_right_continue:
 			;erase the bus
@@ -703,13 +703,35 @@ move_car:
 			call draw_bus
 			popa
 			jmp move_truck
+			;jmp get_input
 				bus_random_u_d_r:
 					mov word [divisor], 2;
 					call random
 					mov word bx, [random_n]
 					cmp bx, 1
-					je bus_random_u_d_desc
+					je bus_random_u_d_desc_r
 					jmp bus_right_continue
+					bus_random_u_d_desc_r:
+						;erase the bus
+						pusha
+						mov al, 0x00    			;set the black color for the bus
+						call draw_bus
+						popa
+						;offset
+						add cx, 20
+						mov word [bus_x], cx
+						jmp bus_random_u_d_desc
+
+		bus_turn_u_d_desc_r:
+			;erase the bus
+			pusha
+			mov al, 0x00    			;set the black color for the bus
+			call draw_bus
+			popa
+			;offset
+			add cx, 20
+			mov word [bus_x], cx
+			jmp bus_turn_u_d_desc
 
 		move_bus_left:
 			mov word cx, [bus_x]	;loads the x component
@@ -734,6 +756,7 @@ move_car:
 			call draw_bus
 			popa
 			jmp move_truck
+			;jmp get_input
 				bus_random_u_d_l:
 					mov word [divisor], 2;
 					call random
@@ -812,9 +835,9 @@ move_car:
 		move_bus_down:
 			mov word cx, [bus_x]	;loads the x component
 			mov word dx, [bus_y]	;loads the y component
-			cmp dx, 174
-			jge bus_turn_r_l_desc
-			cmp dx, 94
+			cmp dx, 154
+			jge bus_turn_r_l_desc_d
+			cmp dx, 74
 			je bus_random_l_r_d
 			bus_down_continue:
 			;erase the bus
@@ -830,13 +853,35 @@ move_car:
 			call draw_bus
 			popa
 			jmp move_truck
+			;jmp get_input
 				bus_random_l_r_d:
 					mov word [divisor], 2;
 					call random
 					mov word bx, [random_n]
 					cmp bx, 1
-					je bus_random_r_l_desc
+					je bus_random_r_l_desc_d
 					jmp bus_down_continue
+					bus_random_r_l_desc_d:
+						;erase the bus
+						pusha
+						mov al, 0x00    			;set the black color for the bus
+						call draw_bus
+						popa
+						;offset
+						add dx, 20
+						mov word [bus_y], dx
+						jmp bus_random_r_l_desc
+
+		bus_turn_r_l_desc_d:
+			;erase the bus
+			pusha
+			mov al, 0x00    			;set the black color for the bus
+			call draw_bus
+			popa
+			;offset
+			add dx, 20
+			mov word [bus_y], dx
+			jmp bus_turn_r_l_desc
 
 		move_bus_up:
 			mov word cx, [bus_x]	;loads the x component
@@ -859,6 +904,7 @@ move_car:
 			call draw_bus
 			popa
 			jmp move_truck
+			;jmp get_input
 			bus_random_l_r_u:
 				mov word [divisor], 2;
 				call random
@@ -945,11 +991,11 @@ move_car:
 		move_truck_right:
 			mov word cx, [truck_x]	;loads the x component
 			mov word dx, [truck_y]	;loads the y component
-			cmp cx, 305						;compare with the x boundary
-			jge truck_turn_u_d_desc	;decides if go up or down
-			cmp cx, 105
+			cmp cx, 265						;compare with the x boundary
+			jge truck_turn_u_d_desc_r	;decides if go up or down
+			cmp cx, 65
 			je truck_random_u_d_r
-			cmp cx, 205
+			cmp cx, 165
 			je truck_random_u_d_r
 			truck_right_continue:
 			;erase the truck
@@ -970,8 +1016,29 @@ move_car:
 					call random
 					mov word bx, [random_n]
 					cmp bx, 1
-					je truck_random_u_d_desc
+					je truck_random_u_d_desc_r
 					jmp truck_right_continue
+					truck_random_u_d_desc_r:
+						;erase the truck
+						pusha
+						mov al, 0x00    			;set the black color for the truck
+						call draw_truck
+						popa
+						;offset
+						add cx, 40
+						mov word [truck_x], cx
+						jmp truck_random_u_d_desc
+
+		truck_turn_u_d_desc_r:
+			;erase the truck
+			pusha
+			mov al, 0x00    			;set the black color for the truck
+			call draw_truck
+			popa
+			;offset
+			add cx, 40
+			mov word [truck_x], cx
+			jmp truck_turn_u_d_desc
 
 		move_truck_left:
 			mov word cx, [truck_x]	;loads the x component
@@ -1074,9 +1141,9 @@ move_car:
 		move_truck_down:
 			mov word cx, [truck_x]	;loads the x component
 			mov word dx, [truck_y]	;loads the y component
-			cmp dx, 174
-			jge truck_turn_r_l_desc
-			cmp dx, 94
+			cmp dx, 134
+			jge truck_turn_r_l_desc_d
+			cmp dx, 54
 			je truck_random_l_r_d
 			truck_down_continue:
 			;erase the truck
@@ -1097,8 +1164,29 @@ move_car:
 					call random
 					mov word bx, [random_n]
 					cmp bx, 1
-					je truck_random_r_l_desc
+					je truck_random_r_l_desc_d
 					jmp truck_down_continue
+					truck_random_r_l_desc_d:
+						;erase the truck
+						pusha
+						mov al, 0x00    			;set the black color for the truck
+						call draw_truck
+						popa
+						;offset
+						add dx, 40
+						mov word [truck_y], dx
+						jmp truck_random_r_l_desc
+
+		truck_turn_r_l_desc_d:
+			;erase the truck
+			pusha
+			mov al, 0x00    			;set the black color for the truck
+			call draw_truck
+			popa
+			;offset
+			add dx, 40
+			mov word [truck_y], dx
+			jmp truck_turn_r_l_desc
 
 		move_truck_up:
 			mov word cx, [truck_x]	;loads the x component
