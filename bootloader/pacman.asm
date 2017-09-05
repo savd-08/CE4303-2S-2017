@@ -461,519 +461,540 @@ move_car:
 	jg move_car_down
 	jl move_car_up
 
-	move_car_right:
-	  mov word cx, [car_x]	;loads the x component
-		mov word dx, [car_y]	;loads the y component
-		cmp cx, 305						;compare with the x boundary
-		jge car_turn_u_d_desc	;decides if go up or down
-		cmp cx, 105
-		je car_random_u_d_r
-		cmp cx, 205
-		je car_random_u_d_r
-		car_right_continue:
-		;erase the car
-		pusha
-		mov al, 0x00    			;set the black color for the car
-		call draw_car
-		popa
-		;move car towards right
-		add cx, 20
-		mov word [car_x], cx
-		mov al, 0x04					;set red color
-		pusha
-		call draw_car
-		popa
-		jmp move_bus
-		;jmp get_input
-			car_random_u_d_r:
-				mov word [divisor], 2;
-				call random
-				mov word bx, [random_n]
-				cmp bx, 1
-				je car_random_u_d_desc
-				jmp car_right_continue
+move_car_right:
+  mov word cx, [car_x]	;loads the x component
+	mov word dx, [car_y]	;loads the y component
+	cmp cx, 305						;compare with the x boundary
+	jge car_turn_u_d_desc	;decides if go up or down
+	cmp cx, 105
+	je car_random_u_d_r
+	cmp cx, 205
+	je car_random_u_d_r
+	car_right_continue:
+	;erase the car
+	pusha
+	mov al, 0x00    			;set the black color for the car
+	call draw_car
+	popa
+	;move car towards right
+	add cx, 20
+	mov word [car_x], cx
+	mov al, 0x04					;set red color
+	pusha
+	call draw_car
+	popa
+	jmp move_bus
+	;jmp get_input
+car_random_u_d_r:
+	mov word [divisor], 2;
+	call random
+	mov word bx, [random_n]
+	cmp bx, 1
+	je car_random_u_d_desc
+	jmp car_right_continue
 
-	move_car_left:
-		mov word cx, [car_x]	;loads the x component
-		mov word dx, [car_y]	;loads the y component
-		cmp cx, 5							;compare with the x boundary
-		jle car_turn_u_d_desc	;decides if go up or down
-		cmp cx, 105
-		je car_random_u_d_l
-		cmp cx, 205
-		je car_random_u_d_l
-		car_left_continue:
-		;erase the car
-		pusha
-		mov al, 0x00    			;set the black color for the car
-		call draw_car
-		popa
-		;move the car towards left
-		sub cx, 20
-		mov word [car_x], cx
-		mov al, 0x04    			;set the red color
-		pusha
-		call draw_car
-		popa
-		jmp move_bus
-		;jmp get_input
-			car_random_u_d_l:
-				mov word [divisor], 2;
-				call random
-				mov word bx, [random_n]
-				cmp bx, 1
-				je car_random_u_d_desc
-				jmp car_left_continue
+move_car_left:
+	mov word cx, [car_x]	;loads the x component
+	mov word dx, [car_y]	;loads the y component
+	cmp cx, 5							;compare with the x boundary
+	jle car_turn_u_d_desc	;decides if go up or down
+	cmp cx, 105
+	je car_random_u_d_l
+	cmp cx, 205
+	je car_random_u_d_l
+	car_left_continue:
+	;erase the car
+	pusha
+	mov al, 0x00    			;set the black color for the car
+	call draw_car
+	popa
+	;move the car towards left
+	sub cx, 20
+	mov word [car_x], cx
+	mov al, 0x04    			;set the red color
+	pusha
+	call draw_car
+	popa
+	jmp move_bus
+	;jmp get_input
 
-	car_random_u_d_desc:
+car_random_u_d_l:
+	mov word [divisor], 2;
+	call random
+	mov word bx, [random_n]
+	cmp bx, 1
+	je car_random_u_d_desc
+	jmp car_left_continue
+
+car_random_u_d_desc:
 	cmp dx, 14
 	je car_turn_d					;turns down
 	cmp dx, 174
 	je car_turn_u
 	jmp car_turn_u_d_rand
 
-	car_turn_u_d_desc:
-		cmp dx, 14
-		je car_turn_d	;turns the car down
-		cmp dx, 174
-		je car_turn_u	;turn the car up
-		jmp car_turn_u_d_rand
-		car_turn_u_d_rand:
-			mov word [divisor], 2;
-			call random
-			mov word bx, [random_n]
-			cmp bx, 0
-			je car_turn_u
-			cmp bx, 1
-			je car_turn_d
-		car_turn_d:
-			;cancels the x movement
-			mov bx, 0
-			mov word [car_vx], bx
-			;turns the car down
-			mov bx, 1
-			mov word [car_vy], bx
-			;move to the new direction
-			jmp move_car
-		car_turn_u:
-			;cancels the x movement
-			mov bx, 0
-			mov word [car_vx], bx
-			;turns the car up
-			mov bx, -1
-			mov word [car_vy], bx
-			;move to the new direction
-			jmp move_car
+car_turn_u_d_desc:
+	cmp dx, 14
+	je car_turn_d	;turns the car down
+	cmp dx, 174
+	je car_turn_u	;turn the car up
+	jmp car_turn_u_d_rand
+
+car_turn_u_d_rand:
+	mov word [divisor], 2;
+	call random
+	mov word bx, [random_n]
+	cmp bx, 0
+	je car_turn_u
+	cmp bx, 1
+	je car_turn_d
+
+car_turn_d:
+	;cancels the x movement
+	mov bx, 0
+	mov word [car_vx], bx
+	;turns the car down
+	mov bx, 1
+	mov word [car_vy], bx
+	;move to the new direction
+	jmp move_car
+
+car_turn_u:
+	;cancels the x movement
+	mov bx, 0
+	mov word [car_vx], bx
+	;turns the car up
+	mov bx, -1
+	mov word [car_vy], bx
+	;move to the new direction
+	jmp move_car
+
+move_car_down:
+	mov word cx, [car_x]	;loads the x component
+	mov word dx, [car_y]	;loads the y component
+	cmp dx, 174
+	jge car_turn_r_l_desc
+	cmp dx, 94
+	je car_random_l_r_d
+	car_down_continue:
+	;erase the car
+	pusha
+	mov al, 0x00    			;set the black color for the car
+	call draw_car
+	popa
+	;move car down
+	add dx, 20
+	mov word [car_y], dx
+	mov al, 0x04					;set red color
+	pusha
+	call draw_car
+	popa
+	jmp move_bus
+	;jmp get_input
+
+car_random_l_r_d:
+	mov word [divisor], 2;
+	call random
+	mov word bx, [random_n]
+	cmp bx, 1
+	je car_random_r_l_desc
+	jmp car_down_continue
+
+move_car_up:
+	mov word cx, [car_x]	;loads the x component
+	mov word dx, [car_y]	;loads the y component
+	cmp dx, 14
+	jle car_turn_r_l_desc
+	cmp dx, 94
+	je car_random_l_r_u
+	car_up_continue:
+	;erase the car
+	pusha
+	mov al, 0x00    			;set the black color for the car
+	call draw_car
+	popa
+	;move car down
+	sub dx, 20
+	mov word [car_y], dx
+	mov al, 0x04					;set red color
+	pusha
+	call draw_car
+	popa
+	jmp move_bus
+	;jmp get_input
+
+car_random_l_r_u:
+	mov word [divisor], 2;
+	call random
+	mov word bx, [random_n]
+	cmp bx, 1
+	je car_random_r_l_desc
+	jmp car_up_continue
+
+;decides if turn right or left
+car_random_r_l_desc:
+	cmp cx, 5
+	je car_turn_r
+	cmp cx, 305
+	je car_turn_l
+	jmp car_turn_r_l_rand
+
+;decides if turn right or left
+car_turn_r_l_desc:
+	cmp cx, 5
+	je car_turn_r
+	cmp cx, 305
+	je car_turn_l
+
+car_turn_r_l_rand:
+	mov word [divisor], 2;
+	call random
+	mov word bx, [random_n]
+	cmp bx, 0
+	je car_turn_r
+	cmp bx, 1
+	je car_turn_l
+
+car_turn_r:
+	;cancels the vertical movement
+	mov bx, 0
+	mov word [car_vy], bx
+	;turn the car to the right
+	mov bx, 1
+	mov word [car_vx], bx
+	;move to the new direction
+	jmp move_car
+
+car_turn_l:
+	;cancels the vertical movement
+	mov bx, 0
+	mov word [car_vy], bx
+	;turn the car to the right
+	mov bx, -1
+	mov word [car_vx], bx
+	;move to the new direction
+	jmp move_car
 
 
-	move_car_down:
-		mov word cx, [car_x]	;loads the x component
-		mov word dx, [car_y]	;loads the y component
-		cmp dx, 174
-		jge car_turn_r_l_desc
-		cmp dx, 94
-		je car_random_l_r_d
-		car_down_continue:
-		;erase the car
-		pusha
-		mov al, 0x00    			;set the black color for the car
-		call draw_car
-		popa
-		;move car down
-		add dx, 20
-		mov word [car_y], dx
-		mov al, 0x04					;set red color
-		pusha
-		call draw_car
-		popa
-		jmp move_bus
-		;jmp get_input
-			car_random_l_r_d:
-				mov word [divisor], 2;
-				call random
-				mov word bx, [random_n]
-				cmp bx, 1
-				je car_random_r_l_desc
-				jmp car_down_continue
+move_bus:
+	;validate the horizontal vector
+	mov word bx, [bus_vx]	;loads the horizontal vector
+	cmp bx, 0
+	jg move_bus_right
+	jl move_bus_left
+	;validate the vertical vector
+	mov word bx, [bus_vy] ;loads the vertical vector
+	cmp bx, 0
+	jg move_bus_down
+	jl move_bus_up
 
-	move_car_up:
-		mov word cx, [car_x]	;loads the x component
-		mov word dx, [car_y]	;loads the y component
-		cmp dx, 14
-		jle car_turn_r_l_desc
-		cmp dx, 94
-		je car_random_l_r_u
-		car_up_continue:
-		;erase the car
-		pusha
-		mov al, 0x00    			;set the black color for the car
-		call draw_car
-		popa
-		;move car down
-		sub dx, 20
-		mov word [car_y], dx
-		mov al, 0x04					;set red color
-		pusha
-		call draw_car
-		popa
-		jmp move_bus
-		;jmp get_input
-		car_random_l_r_u:
-			mov word [divisor], 2;
-			call random
-			mov word bx, [random_n]
-			cmp bx, 1
-			je car_random_r_l_desc
-			jmp car_up_continue
+move_bus_right:
+  mov word cx, [bus_x]	;loads the x component
+	mov word dx, [bus_y]	;loads the y component
+	cmp cx, 285						;compare with the x boundary
+	jge bus_turn_u_d_desc_r	;decides if go up or down
+	cmp cx, 85
+	je bus_random_u_d_r
+	cmp cx, 185
+	je bus_random_u_d_r
+	bus_right_continue:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;move bus towards right
+	add cx, 20
+	mov word [bus_x], cx
+	mov al, 0x0C					;set color for the bus
+	pusha
+	call draw_bus
+	popa
+	jmp move_truck
+	;jmp get_input
+bus_random_u_d_r:
+	mov word [divisor], 2;
+	call random
+	mov word bx, [random_n]
+	cmp bx, 1
+	je bus_random_u_d_desc_r
+	jmp bus_right_continue
 
-	;decides if turn right or left
-	car_random_r_l_desc:
-		cmp cx, 5
-		je car_turn_r
-		cmp cx, 305
-		je car_turn_l
-		jmp car_turn_r_l_rand
+bus_random_u_d_desc_r:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;offset
+	add cx, 20
+	mov word [bus_x], cx
+	jmp bus_random_u_d_desc
 
-	;decides if turn right or left
-	car_turn_r_l_desc:
-		cmp cx, 5
-		je car_turn_r
-		cmp cx, 305
-		je car_turn_l
-		car_turn_r_l_rand:
-			mov word [divisor], 2;
-			call random
-			mov word bx, [random_n]
-			cmp bx, 0
-			je car_turn_r
-			cmp bx, 1
-			je car_turn_l
-		car_turn_r:
-			;cancels the vertical movement
-			mov bx, 0
-			mov word [car_vy], bx
-			;turn the car to the right
-			mov bx, 1
-			mov word [car_vx], bx
-			;move to the new direction
-			jmp move_car
-		car_turn_l:
-			;cancels the vertical movement
-			mov bx, 0
-			mov word [car_vy], bx
-			;turn the car to the right
-			mov bx, -1
-			mov word [car_vx], bx
-			;move to the new direction
-			jmp move_car
+bus_turn_u_d_desc_r:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;offset
+	add cx, 20
+	mov word [bus_x], cx
+	jmp bus_turn_u_d_desc
 
+move_bus_left:
+	mov word cx, [bus_x]	;loads the x component
+	mov word dx, [bus_y]	;loads the y component
+	cmp cx, 5							;compare with the x boundary
+	jle bus_turn_u_d_desc	;decides if go up or down
+	cmp cx, 105
+	je bus_random_u_d_l
+	cmp cx, 205
+	je bus_random_u_d_l
+	bus_left_continue:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;move the bus towards left
+	sub cx, 20
+	mov word [bus_x], cx
+	mov al, 0x0C					;set color for the bus
+	pusha
+	call draw_bus
+	popa
+	jmp move_truck
+	;jmp get_input
 
-	move_bus:
-		;validate the horizontal vector
-		mov word bx, [bus_vx]	;loads the horizontal vector
-		cmp bx, 0
-		jg move_bus_right
-		jl move_bus_left
-		;validate the vertical vector
-		mov word bx, [bus_vy] ;loads the vertical vector
-		cmp bx, 0
-		jg move_bus_down
-		jl move_bus_up
+bus_random_u_d_l:
+	mov word [divisor], 2;
+	call random
+	mov word bx, [random_n]
+	cmp bx, 1
+	je bus_random_u_d_desc
+	jmp bus_left_continue
 
-		move_bus_right:
-		  mov word cx, [bus_x]	;loads the x component
-			mov word dx, [bus_y]	;loads the y component
-			cmp cx, 285						;compare with the x boundary
-			jge bus_turn_u_d_desc_r	;decides if go up or down
-			cmp cx, 85
-			je bus_random_u_d_r
-			cmp cx, 185
-			je bus_random_u_d_r
-			bus_right_continue:
-			;erase the bus
-			pusha
-			mov al, 0x00    			;set the black color for the bus
-			call draw_bus
-			popa
-			;move bus towards right
-			add cx, 20
-			mov word [bus_x], cx
-			mov al, 0x0C					;set color for the bus
-			pusha
-			call draw_bus
-			popa
-			jmp move_truck
-			;jmp get_input
-				bus_random_u_d_r:
-					mov word [divisor], 2;
-					call random
-					mov word bx, [random_n]
-					cmp bx, 1
-					je bus_random_u_d_desc_r
-					jmp bus_right_continue
-					bus_random_u_d_desc_r:
-						;erase the bus
-						pusha
-						mov al, 0x00    			;set the black color for the bus
-						call draw_bus
-						popa
-						;offset
-						add cx, 20
-						mov word [bus_x], cx
-						jmp bus_random_u_d_desc
+bus_random_u_d_desc:
+	cmp dx, 14
+	je bus_turn_d					;turns down
+	cmp dx, 174
+	je bus_turn_u
+	jmp bus_turn_u_d_rand
 
-		bus_turn_u_d_desc_r:
-			;erase the bus
-			pusha
-			mov al, 0x00    			;set the black color for the bus
-			call draw_bus
-			popa
-			;offset
-			add cx, 20
-			mov word [bus_x], cx
-			jmp bus_turn_u_d_desc
+bus_turn_u_d_desc:
+	cmp dx, 14
+	je bus_turn_d	;turns the bus down
+	cmp dx, 174
+	je bus_turn_u	;turn the bus up
+	jmp bus_turn_u_d_rand
 
-		move_bus_left:
-			mov word cx, [bus_x]	;loads the x component
-			mov word dx, [bus_y]	;loads the y component
-			cmp cx, 5							;compare with the x boundary
-			jle bus_turn_u_d_desc	;decides if go up or down
-			cmp cx, 105
-			je bus_random_u_d_l
-			cmp cx, 205
-			je bus_random_u_d_l
-			bus_left_continue:
-			;erase the bus
-			pusha
-			mov al, 0x00    			;set the black color for the bus
-			call draw_bus
-			popa
-			;move the bus towards left
-			sub cx, 20
-			mov word [bus_x], cx
-			mov al, 0x0C					;set color for the bus
-			pusha
-			call draw_bus
-			popa
-			jmp move_truck
-			;jmp get_input
-				bus_random_u_d_l:
-					mov word [divisor], 2;
-					call random
-					mov word bx, [random_n]
-					cmp bx, 1
-					je bus_random_u_d_desc
-					jmp bus_left_continue
+bus_turn_u_d_rand:
+	mov word [divisor], 2;
+	call random
+	mov word bx, [random_n]
+	cmp bx, 0
+	je bus_turn_u
+	cmp bx, 1
+	je bus_turn_d
 
-		bus_random_u_d_desc:
-		cmp dx, 14
-		je bus_turn_d					;turns down
-		cmp dx, 174
-		je bus_turn_u
-		jmp bus_turn_u_d_rand
+bus_turn_d:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;cancels the x movement
+	mov bx, 0
+	mov word [bus_vx], bx
+	;turns the bus down
+	mov bx, 1
+	mov word [bus_vy], bx
+	;change orientation
+	mov word [bus_w], 11
+	mov word [bus_h], 30
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;move to the new direction
+	jmp move_bus
 
-		bus_turn_u_d_desc:
-			cmp dx, 14
-			je bus_turn_d	;turns the bus down
-			cmp dx, 174
-			je bus_turn_u	;turn the bus up
-			jmp bus_turn_u_d_rand
-			bus_turn_u_d_rand:
-				mov word [divisor], 2;
-				call random
-				mov word bx, [random_n]
-				cmp bx, 0
-				je bus_turn_u
-				cmp bx, 1
-				je bus_turn_d
-			bus_turn_d:
-				;erase the bus
-				pusha
-				mov al, 0x00    			;set the black color for the bus
-				call draw_bus
-				popa
-				;cancels the x movement
-				mov bx, 0
-				mov word [bus_vx], bx
-				;turns the bus down
-				mov bx, 1
-				mov word [bus_vy], bx
-				;change orientation
-				mov word [bus_w], 11
-				mov word [bus_h], 30
-				;erase the bus
-				pusha
-				mov al, 0x00    			;set the black color for the bus
-				call draw_bus
-				popa
-				;move to the new direction
-				jmp move_bus
-			bus_turn_u:
-				;erase the bus
-				pusha
-				mov al, 0x00    			;set the black color for the bus
-				call draw_bus
-				popa
-				;cancels the x movement
-				mov bx, 0
-				mov word [bus_vx], bx
-				;turns the bus up
-				mov bx, -1
-				mov word [bus_vy], bx
-				;change orientation
-				mov word [bus_w], 11
-				mov word [bus_h], 30
-				;erase the bus
-				pusha
-				mov al, 0x00    			;set the black color for the bus
-				call draw_bus
-				popa
-				;move to the new direction
-				jmp move_bus
+bus_turn_u:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;cancels the x movement
+	mov bx, 0
+	mov word [bus_vx], bx
+	;turns the bus up
+	mov bx, -1
+	mov word [bus_vy], bx
+	;change orientation
+	mov word [bus_w], 11
+	mov word [bus_h], 30
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;move to the new direction
+	jmp move_bus
 
 
-		move_bus_down:
-			mov word cx, [bus_x]	;loads the x component
-			mov word dx, [bus_y]	;loads the y component
-			cmp dx, 154
-			jge bus_turn_r_l_desc_d
-			cmp dx, 74
-			je bus_random_l_r_d
-			bus_down_continue:
-			;erase the bus
-			pusha
-			mov al, 0x00    			;set the black color for the bus
-			call draw_bus
-			popa
-			;move bus down
-			add dx, 20
-			mov word [bus_y], dx
-			mov al, 0x0C
-			pusha
-			call draw_bus
-			popa
-			jmp move_truck
-			;jmp get_input
-				bus_random_l_r_d:
-					mov word [divisor], 2;
-					call random
-					mov word bx, [random_n]
-					cmp bx, 1
-					je bus_random_r_l_desc_d
-					jmp bus_down_continue
-					bus_random_r_l_desc_d:
-						;erase the bus
-						pusha
-						mov al, 0x00    			;set the black color for the bus
-						call draw_bus
-						popa
-						;offset
-						add dx, 20
-						mov word [bus_y], dx
-						jmp bus_random_r_l_desc
+move_bus_down:
+	mov word cx, [bus_x]	;loads the x component
+	mov word dx, [bus_y]	;loads the y component
+	cmp dx, 154
+	jge bus_turn_r_l_desc_d
+	cmp dx, 74
+	je bus_random_l_r_d
 
-		bus_turn_r_l_desc_d:
-			;erase the bus
-			pusha
-			mov al, 0x00    			;set the black color for the bus
-			call draw_bus
-			popa
-			;offset
-			add dx, 20
-			mov word [bus_y], dx
-			jmp bus_turn_r_l_desc
+bus_down_continue:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;move bus down
+	add dx, 20
+	mov word [bus_y], dx
+	mov al, 0x0C
+	pusha
+	call draw_bus
+	popa
+	jmp move_truck
+	;jmp get_input
 
-		move_bus_up:
-			mov word cx, [bus_x]	;loads the x component
-			mov word dx, [bus_y]	;loads the y component
-			cmp dx, 14
-			jle bus_turn_r_l_desc
-			cmp dx, 94
-			je bus_random_l_r_u
-			bus_up_continue:
-			;erase the bus
-			pusha
-			mov al, 0x00    			;set the black color for the bus
-			call draw_bus
-			popa
-			;move bus down
-			sub dx, 20
-			mov word [bus_y], dx
-			mov al, 0x0C
-			pusha
-			call draw_bus
-			popa
-			jmp move_truck
-			;jmp get_input
-			bus_random_l_r_u:
-				mov word [divisor], 2;
-				call random
-				mov word bx, [random_n]
-				cmp bx, 1
-				je bus_random_r_l_desc
-				jmp bus_up_continue
+bus_random_l_r_d:
+	mov word [divisor], 2;
+	call random
+	mov word bx, [random_n]
+	cmp bx, 1
+	je bus_random_r_l_desc_d
+	jmp bus_down_continue
 
-		;decides if turn right or left
-		bus_random_r_l_desc:
-			cmp cx, 5
-			je bus_turn_r
-			cmp cx, 305
-			je bus_turn_l
-			jmp bus_turn_r_l_rand
+bus_random_r_l_desc_d:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;offset
+	add dx, 20
+	mov word [bus_y], dx
+	jmp bus_random_r_l_desc
 
-		;decides if turn right or left
-		bus_turn_r_l_desc:
-			cmp cx, 5
-			je bus_turn_r
-			cmp cx, 305
-			je bus_turn_l
-			bus_turn_r_l_rand:
-				mov word [divisor], 2;
-				call random
-				mov word bx, [random_n]
-				cmp bx, 0
-				je bus_turn_r
-				cmp bx, 1
-				je bus_turn_l
-			bus_turn_r:
-				;erase the bus
-				pusha
-				mov al, 0x00    			;set the black color for the bus
-				call draw_bus
-				popa
-				;cancels the vertical movement
-				mov bx, 0
-				mov word [bus_vy], bx
-				;turn the bus to the right
-				mov bx, 1
-				mov word [bus_vx], bx
-				;change orientation
-				mov word [bus_w], 30
-				mov word [bus_h], 11
-				;erase the bus
-				pusha
-				mov al, 0x00    			;set the black color for the bus
-				call draw_bus
-				popa
-				;move to the new direction
-				jmp move_bus
-			bus_turn_l:
-				;erase the bus
-				pusha
-				mov al, 0x00    			;set the black color for the bus
-				call draw_bus
-				popa
-				;cancels the vertical movement
-				mov bx, 0
-				mov word [bus_vy], bx
-				;turn the bus to the right
-				mov bx, -1
-				mov word [bus_vx], bx
-				;change orientation
-				mov word [bus_w], 30
-				mov word [bus_h], 11
-				;move to the new direction
-				jmp move_bus
+bus_turn_r_l_desc_d:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;offset
+	add dx, 20
+	mov word [bus_y], dx
+	jmp bus_turn_r_l_desc
+
+move_bus_up:
+	mov word cx, [bus_x]	;loads the x component
+	mov word dx, [bus_y]	;loads the y component
+	cmp dx, 14
+	jle bus_turn_r_l_desc
+	cmp dx, 94
+	je bus_random_l_r_u
+
+bus_up_continue:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;move bus down
+	sub dx, 20
+	mov word [bus_y], dx
+	mov al, 0x0C
+	pusha
+	call draw_bus
+	popa
+	jmp move_truck
+
+;jmp get_input
+bus_random_l_r_u:
+	mov word [divisor], 2;
+	call random
+	mov word bx, [random_n]
+	cmp bx, 1
+	je bus_random_r_l_desc
+	jmp bus_up_continue
+
+;decides if turn right or left
+bus_random_r_l_desc:
+	cmp cx, 5
+	je bus_turn_r
+	cmp cx, 305
+	je bus_turn_l
+	jmp bus_turn_r_l_rand
+
+;decides if turn right or left
+bus_turn_r_l_desc:
+	cmp cx, 5
+	je bus_turn_r
+	cmp cx, 305
+	je bus_turn_l
+
+bus_turn_r_l_rand:
+	mov word [divisor], 2;
+	call random
+	mov word bx, [random_n]
+	cmp bx, 0
+	je bus_turn_r
+	cmp bx, 1
+	je bus_turn_l
+
+bus_turn_r:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;cancels the vertical movement
+	mov bx, 0
+	mov word [bus_vy], bx
+	;turn the bus to the right
+	mov bx, 1
+	mov word [bus_vx], bx
+	;change orientation
+	mov word [bus_w], 30
+	mov word [bus_h], 11
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;move to the new direction
+	jmp move_bus
+
+bus_turn_l:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
+	;cancels the vertical movement
+	mov bx, 0
+	mov word [bus_vy], bx
+	;turn the bus to the right
+	mov bx, -1
+	mov word [bus_vx], bx
+	;change orientation
+	mov word [bus_w], 30
+	mov word [bus_h], 11
+	;move to the new direction
+	jmp move_bus
 
 
 move_truck:
