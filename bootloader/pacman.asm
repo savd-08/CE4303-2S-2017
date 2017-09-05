@@ -776,6 +776,11 @@ bus_random_u_d_l:
 	jmp bus_left_continue
 
 bus_random_u_d_desc:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
 	cmp dx, 14
 	je bus_turn_d					;turns down
 	cmp dx, 174
@@ -783,6 +788,11 @@ bus_random_u_d_desc:
 	jmp bus_turn_u_d_rand
 
 bus_turn_u_d_desc:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
 	cmp dx, 14
 	je bus_turn_d	;turns the bus down
 	cmp dx, 174
@@ -799,11 +809,6 @@ bus_turn_u_d_rand:
 	je bus_turn_d
 
 bus_turn_d:
-	;erase the bus
-	pusha
-	mov al, 0x00    			;set the black color for the bus
-	call draw_bus
-	popa
 	;cancels the x movement
 	mov bx, 0
 	mov word [bus_vx], bx
@@ -813,20 +818,10 @@ bus_turn_d:
 	;change orientation
 	mov word [bus_w], 11
 	mov word [bus_h], 30
-	;erase the bus
-	pusha
-	mov al, 0x00    			;set the black color for the bus
-	call draw_bus
-	popa
 	;move to the new direction
 	jmp move_bus
 
 bus_turn_u:
-	;erase the bus
-	pusha
-	mov al, 0x00    			;set the black color for the bus
-	call draw_bus
-	popa
 	;cancels the x movement
 	mov bx, 0
 	mov word [bus_vx], bx
@@ -836,11 +831,6 @@ bus_turn_u:
 	;change orientation
 	mov word [bus_w], 11
 	mov word [bus_h], 30
-	;erase the bus
-	pusha
-	mov al, 0x00    			;set the black color for the bus
-	call draw_bus
-	popa
 	;move to the new direction
 	jmp move_bus
 
@@ -933,6 +923,11 @@ bus_random_l_r_u:
 
 ;decides if turn right or left
 bus_random_r_l_desc:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
 	cmp cx, 5
 	je bus_turn_r
 	cmp cx, 305
@@ -941,6 +936,11 @@ bus_random_r_l_desc:
 
 ;decides if turn right or left
 bus_turn_r_l_desc:
+	;erase the bus
+	pusha
+	mov al, 0x00    			;set the black color for the bus
+	call draw_bus
+	popa
 	cmp cx, 5
 	je bus_turn_r
 	cmp cx, 305
@@ -956,11 +956,6 @@ bus_turn_r_l_rand:
 	je bus_turn_l
 
 bus_turn_r:
-	;erase the bus
-	pusha
-	mov al, 0x00    			;set the black color for the bus
-	call draw_bus
-	popa
 	;cancels the vertical movement
 	mov bx, 0
 	mov word [bus_vy], bx
@@ -970,20 +965,10 @@ bus_turn_r:
 	;change orientation
 	mov word [bus_w], 30
 	mov word [bus_h], 11
-	;erase the bus
-	pusha
-	mov al, 0x00    			;set the black color for the bus
-	call draw_bus
-	popa
 	;move to the new direction
 	jmp move_bus
 
 bus_turn_l:
-	;erase the bus
-	pusha
-	mov al, 0x00    			;set the black color for the bus
-	call draw_bus
-	popa
 	;cancels the vertical movement
 	mov bx, 0
 	mov word [bus_vy], bx
@@ -1090,6 +1075,7 @@ truck_left_continue:
 	jmp get_input
 
 truck_random_u_d_l:
+	;random
 	mov word [divisor], 2;
 	call random
 	mov word bx, [random_n]
@@ -1098,6 +1084,12 @@ truck_random_u_d_l:
 	jmp truck_left_continue
 
 truck_random_u_d_desc:
+	;erase the truck
+	pusha
+	mov al, 0x00    			;set the black color for the truck
+	call draw_truck
+	popa
+	;random
 	cmp dx, 14
 	je truck_turn_d					;turns down
 	cmp dx, 174
@@ -1105,6 +1097,11 @@ truck_random_u_d_desc:
 	jmp truck_turn_u_d_rand
 
 truck_turn_u_d_desc:
+	;erase the truck
+	pusha
+	mov al, 0x00    			;set the black color for the truck
+	call draw_truck
+	popa
 	cmp dx, 14
 	je truck_turn_d	;turns the truck down
 	cmp dx, 174
@@ -1121,11 +1118,6 @@ truck_turn_u_d_rand:
 	je truck_turn_d
 
 truck_turn_d:
-	;erase the truck
-	pusha
-	mov al, 0x00    			;set the black color for the truck
-	call draw_truck
-	popa
 	;cancels the x movement
 	mov bx, 0
 	mov word [truck_vx], bx
@@ -1135,20 +1127,10 @@ truck_turn_d:
 	;change orientation
 	mov word [truck_w], 11
 	mov word [truck_h], 50
-	;erase the truck
-	pusha
-	mov al, 0x00	    			;set the black color for the truck
-	call draw_truck
-	popa
 	;move to the new direction
 	jmp move_truck
 
 truck_turn_u:
-	;erase the truck
-	pusha
-	mov al, 0x00    			;set the black color for the truck
-	call draw_truck
-	popa
 	;cancels the x movement
 	mov bx, 0
 	mov word [truck_vx], bx
@@ -1161,11 +1143,6 @@ truck_turn_u:
 	;se acomoda y
 	sub dx, 20;
 	mov [truck_y], dx
-	;erase the truck
-	pusha
-	mov al, 0x00    			;set the black color for the truck
-	call draw_truck
-	popa
 	;move to the new direction
 	jmp move_truck
 
@@ -1255,6 +1232,11 @@ truck_random_l_r_u:
 
 ;decides if turn right or left
 truck_random_r_l_desc:
+	;erase the truck
+	pusha
+	mov al, 0x00    			;set the black color for the truck
+	call draw_truck
+	popa
 	cmp cx, 5
 	je truck_turn_r
 	cmp cx, 305
@@ -1263,6 +1245,11 @@ truck_random_r_l_desc:
 
 ;decides if turn right or left
 truck_turn_r_l_desc:
+	;erase the truck
+	pusha
+	mov al, 0x00    			;set the black color for the truck
+	call draw_truck
+	popa
 	cmp cx, 5
 	je truck_turn_r
 	cmp cx, 305
@@ -1278,11 +1265,6 @@ truck_turn_r_l_rand:
 	je truck_turn_l
 
 truck_turn_r:
-	;erase the truck
-	pusha
-	mov al, 0x00    			;set the black color for the truck
-	call draw_truck
-	popa
 	;cancels the vertical movement
 	mov bx, 0
 	mov word [truck_vy], bx
@@ -1292,20 +1274,10 @@ truck_turn_r:
 	;change orientation
 	mov word [truck_w], 50
 	mov word [truck_h], 11
-	;erase the truck
-	pusha
-	mov al, 0x00    			;set the black color for the truck
-	call draw_truck
-	popa
 	;move to the new direction
 	jmp move_truck
 
 truck_turn_l:
-	;erase the truck
-	pusha
-	mov al, 0x00    			;set the black color for the truck
-	call draw_truck
-	popa
 	;cancels the vertical movement
 	mov bx, 0
 	mov word [truck_vy], bx
@@ -1315,7 +1287,7 @@ truck_turn_l:
 	;change orientation
 	mov word [truck_w], 50
 	mov word [truck_h], 11
-	;se acomoda x
+	;adjust x
 	sub cx, 20;
 	mov [truck_x], cx
 	;move to the new direction
