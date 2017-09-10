@@ -11,14 +11,14 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <errno.h>
-#include <pthread.h>  // a diferencia del normal se agregan hilos
+#include <pthread.h> //add pthread.h 
 #include <semaphore.h>
 #include <signal.h>
 #include "log.h"
 #include "HttpConstants.h"
 
 static  char  	      path_root[PATH_MAX];
-static  int   	      port_number = DEFAULT_PORT_NUMBER; //8053
+static  int   	      port_number = DEFAULT_PORT_NUMBER; //port
 typedef void 	      (*strategy_t)(int);
 static  sig_atomic_t  status_on = True;
 static  char  	      strategy_name[STRATEGY_MAX];
@@ -56,7 +56,7 @@ static int verify_request(int fd,http_request_t *request)
 		}
 		else
 		{
-			request->method        = HTTP_STATUS_NOT_IMPLEMENTED;
+			request->method = HTTP_STATUS_NOT_IMPLEMENTED;
 		}
 
 	}
