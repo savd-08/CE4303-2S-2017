@@ -17,7 +17,8 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <signal.h>
-#include "log.h"
+#include <stdarg.h>
+
 /*
  * Constants of http responses
  */
@@ -28,7 +29,7 @@
 #define MAX_HEADERS                 64
 #define MAX_METHODS                 10
 #define BACKLOG                     50
-#define ERROR_BAD_REQUEST_400       "./files/400.html"
+#define ERROR_BAD_REQUEST_400       "./files/404.html"
 #define ERROR_NOT_FOUND_404         "./files/404.html"
 #define True                        1
 #define False                       0
@@ -36,7 +37,8 @@
 #define CURRENT_DIRECTORY           "."
 #define DEFAULT_WORKER_SIZE         16
 #define DEFAULT_BUFFER_SIZE         16
-#define DEFAULT_PORT_NUMBER         8011 //Port define
+#define DEFAULT_PORT_NUMBER         8011
+
 
 typedef enum  {
     HTTP_METHOD_OPTIONS,
@@ -48,6 +50,8 @@ typedef enum  {
     HTTP_METHOD_TRACE,
     HTTP_METHOD_CONNECT
 } http_method_t;
+
+
 
 enum http_status {
     HTTP_STATUS_CONTINUE,
@@ -105,7 +109,8 @@ const http_status_t HTTP_STATUS_LOOKUP[] = {
 
     {100, "Continue"},
     {101, "Switching Protocols"},
-    
+
+
     {200, "OK"},
     {201, "Created"},
     {202, "Accepted"},
@@ -114,6 +119,7 @@ const http_status_t HTTP_STATUS_LOOKUP[] = {
     {205, "Reset Content"},
     {206, "Partial Content"},
 
+
     {300, "Multiple Choices"},
     {301, "Moved Permanently"},
     {302, "Found"},
@@ -121,6 +127,7 @@ const http_status_t HTTP_STATUS_LOOKUP[] = {
     {304, "Not Modified"},
     {305, "Use Proxy"},
     {307, "Temporary Redirect"},
+
 
     {400, "Bad Request"},
     {401, "Unauthorized"},
@@ -173,5 +180,24 @@ typedef struct {
 } http_response_t;
 
 
+/*
+ * Structures of the server_log like id and name
+ */
+typedef enum
+{
+	ERROR = 0,
+	WARNING,
+	INFO,
+	DEBUG
+}server_log_id_t;
 
-#endif
+typedef int log_t;
+
+typedef struct
+{
+	int id;
+	char *name;
+}server_log_t;
+
+
+#endif /* HTTPSTRUCTURES_H_ */
