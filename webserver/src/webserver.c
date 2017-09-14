@@ -72,7 +72,7 @@ int check_file_exists(const char * path)
 }
 
 // Obtains the size of the file
- 
+
 int file_size(const char *path)
 {
 	if(!check_file_exists(path)) exit(0);
@@ -210,7 +210,7 @@ static int handle_error(http_status_t status,char * error_resource)
 	return 0;
 }
 
-//  Verifies if the requested file exists, and builds the response 
+//  Verifies if the requested file exists, and builds the response
 
 
 static http_status_t check_response_status(const int status,const char * path)
@@ -230,9 +230,9 @@ const char* getFileExtension(const char *path)
 	/* html */
 	if(strstr(path,".HTML") || strstr(path,".html")) return "text/html";
 	if(strstr(path,".HTM" ) || strstr(path,".htm" )) return "text/html";
-	if(strstr(path,".XML" ) || strstr(path,".xml" )) return "application/xml";	
+	if(strstr(path,".XML" ) || strstr(path,".xml" )) return "application/xml";
 	if(strstr(path,".CSS" ) || strstr(path,".css" )) return "text/css";
-	if(strstr(path,".JS"  ) || strstr(path,".js"  )) return "application/javascript";	
+	if(strstr(path,".JS"  ) || strstr(path,".js"  )) return "application/javascript";
 	/* images */
 	if(strstr(path,".GIF" ) || strstr(path,".gif" )) return "image/gif";
 	if(strstr(path,".JPEG") || strstr(path,".jpeg")) return "image/jpeg";
@@ -251,7 +251,7 @@ const char* getFileExtension(const char *path)
 	if(strstr(path,".PDF" ) || strstr(path,".pdf" )) return "application/x-pdf";
 	if(strstr(path,".ZIP" ) || strstr(path,".zip" )) return "image/zip";
 	if(strstr(path,".GZ"  ) || strstr(path,".gz"  )) return "image/gz";
-	if(strstr(path,".TAR" ) || strstr(path,".tar" )) return "image/tar";				
+	if(strstr(path,".TAR" ) || strstr(path,".tar" )) return "image/tar";
 	/* music */
 	if(strstr(path,".MP3" ) || strstr(path,".mp3" )) return "audio/mpeg";
 	if(strstr(path,".OGG" ) || strstr(path,".ogg" )) return "audio/ogg";
@@ -353,7 +353,7 @@ static int clear_responses(http_response_t *response)
 	char   head_value    [MAX_HEADER_VALUE_LENGTH];
 	int    head_count = 0;
 	FILE * fr;
-	fr = fdopen(dup(fd),"r");	
+	fr = fdopen(dup(fd),"r");
 
 	if(fr)
 	{
@@ -382,9 +382,9 @@ static int clear_responses(http_response_t *response)
 			sscanf(command_line,"%s: %s",head_name,head_value);
 
 			strcpy(request->headers[head_count].field_name,head_name);
-			strcpy(request->headers[head_count++].field_value,head_value);    
+			strcpy(request->headers[head_count++].field_value,head_value);
 		}
-		else 
+		else
 			break;
 	}
 	request->header_count=head_count;
@@ -397,8 +397,8 @@ static int clear_responses(http_response_t *response)
 
 static void manage_single_request(int peer_sfd)
 {
-	http_request_t  *request  = (http_request_t*)malloc(sizeof(http_request_t));	
-	http_response_t *response = (http_response_t*)malloc(sizeof(http_response_t));	
+	http_request_t  *request  = (http_request_t*)malloc(sizeof(http_request_t));
+	http_response_t *response = (http_response_t*)malloc(sizeof(http_response_t));
 	strcpy(response->resource_path,path_root);
 
 	next_request(peer_sfd, request);
@@ -407,7 +407,7 @@ static void manage_single_request(int peer_sfd)
 
 	clear_responses(response);
 	free(request);
-	free(response);	
+	free(response);
 }
 
 // Create the process for each request
@@ -417,16 +417,60 @@ static void perform_serially(int sfd)
 	//print_log(DEBUG,"Sequential Version");
 	while(status_on)
 	{
-		int peer_sfd = accept(sfd,NULL,NULL);                           
+		int peer_sfd = accept(sfd,NULL,NULL);
 
 		if(peer_sfd == -1)
-		{	
+		{
 			print_log(WARNING,"\nAccept failed");
 			continue;
 		}
 		manage_single_request(peer_sfd);
-		
+
 		close(peer_sfd);
+	}
+}
+
+//manage the request in a child process
+static void forked_request(int peer_sfd) {
+	manage_single_request(peer_sfd);
+
+	close(peer_sfd);
+}
+
+static void listen_forked(int sfd) {
+	//avoid the creations of zombies
+	struct sigaction sigchld_action = {
+	  .sa_handler = SIG_DFL,
+	  .sa_flags = SA_NOCLDWAIT
+	};
+	sigaction(SIGCHLD, &sigchld_action, NULL);
+	//process id for the fork
+	pid_t pid;
+
+	while (status_on) {
+		//obtains the sockect conection
+		int peer_sfd = accept(sfd,NULL,NULL);
+		//if the conections fails
+		if(peer_sfd == -1){
+			continue;
+		}
+		//if the conections works it makes a fork
+		pid = fork();
+
+		if(pid < 0){
+			perror("the fork failed");
+			exit(1);
+		}
+		//for the fork process
+		else if(pid == 0){
+			close(sfd);
+			forked_request(peer_sfd);
+			exit(0);
+		}
+		//for the parent process
+		else{
+			close(peer_sfd);
+		}
 	}
 }
 
@@ -460,11 +504,11 @@ static void listen_threaded(int sfd)
 	while(status_on)
 	{
 		//Wait for a request on socket sfd (accept is a blocking function)
-		peer_sfd = accept(sfd, NULL, NULL);                           
+		peer_sfd = accept(sfd, NULL, NULL);
 
 		//If sfd < 0, accept function has thrown an error
 		if(peer_sfd < 0)
-		{	
+		{
 			print_log(ERROR,"Couldn't accept request\n");
 			continue;
 		}
@@ -474,8 +518,8 @@ static void listen_threaded(int sfd)
 
       	//Don't do anything if pointer creation fails
 		if(other_sfd == NULL){
-			  print_log(ERROR,"Error creating pointer of socket\n");  
-			  continue; 
+			  print_log(ERROR,"Error creating pointer of socket\n");
+			  continue;
 		}
 
 		//Assign the sfd value to the pointer
@@ -490,7 +534,7 @@ static void listen_threaded(int sfd)
 			printf("Error creating thread\n");
 			//Free the memory being used by other_sfd
 			free(other_sfd);
-			//Close the socket 
+			//Close the socket
 			close(peer_sfd);
 			pthread_exit(NULL);
 		}
@@ -507,25 +551,25 @@ void *manage_request_prethread(void *v_ptr){
 
 	while(status_on)
 	{
-		//Lock mutex 
+		//Lock mutex
 		pthread_mutex_lock(&pt_lock);
 
 		//Wait for a request in the sfd socket
-		int peer_sfd = accept(sfd, NULL, NULL);  
+		int peer_sfd = accept(sfd, NULL, NULL);
 
 		//Unlock mutex
 		pthread_mutex_unlock(&pt_lock);
 
 		//Continue loop if accept failed
 		if(peer_sfd == -1)
-		{	
+		{
 			print_log(WARNING,"\nAccept failed");
 			continue;
 		}
 
-		//Manage a single request 
+		//Manage a single request
 		manage_single_request(peer_sfd);
-		
+
 		close(peer_sfd);
 	}
 
@@ -550,7 +594,7 @@ static void listen_prethreaded(int sfd)
 	    if(pthread_create(&request_thread[i], NULL, manage_request_prethread, &sfd) < 0) {
 			//Do nothing if failure
 			printf("Error creating thread\n");
-			//Close the socket 
+			//Close the socket
 			close(sfd);
 			pthread_exit(NULL);
 		}
@@ -587,7 +631,7 @@ int initialize_server()
 	sigset_t new;
     sigemptyset (&new);
     sigaddset(&new, SIGPIPE);
-    if (pthread_sigmask(SIG_BLOCK, &new, NULL) != 0) 
+    if (pthread_sigmask(SIG_BLOCK, &new, NULL) != 0)
     {
         print_log(ERROR,"Unable to mask SIGPIPE");
         exit(-1);
@@ -625,7 +669,7 @@ strategy_t configure_server(int argc,char *argv[], int *pre_amt)
 		{
 		case 'f':
 			//Set function pointer to forked version
-			//operation = &listen_forked;
+			operation = &listen_forked;
 			port_number = FORKED_PORT_NUMBER; //port
 			strcpy(strategy_name,"Forked");
 			break;
@@ -658,7 +702,7 @@ strategy_t configure_server(int argc,char *argv[], int *pre_amt)
 			port_number = PREFORKED_PORT_NUMBER; //port
 			break;
 		case '?':
-			if (optopt == 'r' || optopt == 'f' )
+			if (optopt == 'r' || optopt == 'd' )
 			  fprintf (stderr, "Option -%c requires an integer argument.\n", optopt);
 			else if (isprint (optopt))
 			  fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -676,7 +720,7 @@ strategy_t configure_server(int argc,char *argv[], int *pre_amt)
 
 	//Check if the root folder exists
 	strcpy(path_root,"./files");
-	if(!check_folder_exists(path_root)) 
+	if(!check_folder_exists(path_root))
 		exit(0);
 
 	return operation;
