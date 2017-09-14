@@ -15,11 +15,14 @@
 
 static  char  	      path_root[PATH_MAX];
 static  int   	      port_number         = DEFAULT_PORT_NUMBER; //8011
+static	int 		  pre_amt = 10;
 typedef void 	      (*strategy_t)(int);
 static  sig_atomic_t  status_on           = True;
 static  char  	      strategy_name[STRATEGY_MAX];
 timer_t total_uptime,requests_time;
 log_t current_log_no = DEBUG;
+
+pthread_mutex_t pt_lock;
 
 static int total_requests;
 static int total_size;
@@ -85,7 +88,7 @@ int check_folder_exists(const char *path)
 {
 	struct stat st;
 	if(lstat(path,&st)<0)
-	{	print_log(ERROR,"ROOT DIRECTORY DOES NOT EXISTS");
+	{	print_log(ERROR,"ROOT DIRECTORY DOES NOT EXIST");
 		return 0;
 	}
 	if(S_ISDIR(st.st_mode))
@@ -427,7 +430,7 @@ static void perform_serially(int sfd)
 	}
 }
 
-//Function to be called by a thread when joining
+//Function to be called by a thread when executed
 void *manage_request_thread(void *v_ptr){
 	//Cast the void pointer to int
 	int peer_sfd = *((int *) v_ptr);
@@ -453,7 +456,7 @@ void *manage_request_thread(void *v_ptr){
 static void listen_threaded(int sfd)
 {
 	int peer_sfd;
-	//Infinite loop wainting for requests
+	//Infinite loop waiting for requests
 	while(status_on)
 	{
 		//Wait for a request on socket sfd (accept is a blocking function)
@@ -494,6 +497,68 @@ static void listen_threaded(int sfd)
 	}
 	pthread_exit(NULL);
 }
+
+//Function to be called by a thread when executed
+void *manage_request_prethread(void *v_ptr){
+	//Cast the void pointer to int
+	int sfd = *((int *) v_ptr);
+
+	//printf("Thread %lu \n", pthread_self());
+
+	while(status_on)
+	{
+		//Lock mutex 
+		pthread_mutex_lock(&pt_lock);
+
+		//Wait for a request in the sfd socket
+		int peer_sfd = accept(sfd, NULL, NULL);  
+
+		//Unlock mutex
+		pthread_mutex_unlock(&pt_lock);
+
+		//Continue loop if accept failed
+		if(peer_sfd == -1)
+		{	
+			print_log(WARNING,"\nAccept failed");
+			continue;
+		}
+
+		//Manage a single request 
+		manage_single_request(peer_sfd);
+		
+		close(peer_sfd);
+	}
+
+}
+
+static void listen_prethreaded(int sfd)
+{
+	//Pointer to a thread
+    pthread_t request_thread[pre_amt];
+
+    //Initialize mutex
+    if (pthread_mutex_init(&pt_lock, NULL) != 0)
+    {
+        print_log(ERROR,"\n mutex init failed\n");
+        exit(1);
+    }
+
+    //Create all pre_amt threads
+    for (int i = 0; i < pre_amt; ++i)
+    {
+    	//Create the pthread using the manage_request_prethread function and other_sfd as a parameter
+	    if(pthread_create(&request_thread[i], NULL, manage_request_prethread, &sfd) < 0) {
+			//Do nothing if failure
+			printf("Error creating thread\n");
+			//Close the socket 
+			close(sfd);
+			pthread_exit(NULL);
+		}
+	 }
+
+	pthread_exit(NULL);
+}
+
 
 //  Initialize the sockets of the server
 
@@ -578,9 +643,9 @@ strategy_t configure_server(int argc,char *argv[], int *pre_amt)
 			break;
 		case 'r':
 			//Set function pointer to pre-threaded version
-			//operation = &listen_prethreaded;
+			operation = &listen_prethreaded;
 			//Set thread amount
-			//*pre_amt = atoi(optarg);
+			*pre_amt = atoi(optarg);
 			strcpy(strategy_name,"Prethreaded");
 			port_number = PRETHREADED_PORT_NUMBER; //port
 			break;
@@ -623,7 +688,6 @@ int main(int argc,char *argv[])
 {
 	strategy_t server_operation;
 	int sfd;
-	int pre_amt = 10;
 	server_operation = (strategy_t)configure_server(argc, argv, &pre_amt);
 	sfd              = initialize_server();
 	server_operation(sfd);  				//start server
