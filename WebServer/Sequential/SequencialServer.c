@@ -1,7 +1,3 @@
-
-/*-------------- Sequencial Server ------------ */
-
-//Includes
 #include <stdio.h>
 #include <sys/socket.h>
 #include <string.h>
@@ -13,17 +9,150 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <signal.h>
-#include "log.h"
 #include "HttpStructure.h"
 
+
 static  char  	      path_root[PATH_MAX];
-static  int   	      port_number = DEFAULT_PORT_NUMBER; //8011 port
+static  int   	      port_number         = DEFAULT_PORT_NUMBER; //8011
 typedef void 	      (*strategy_t)(int);
-static  sig_atomic_t  status_on = True;
+static  sig_atomic_t  status_on           = True;
 static  char  	      strategy_name[STRATEGY_MAX];
 timer_t total_uptime,requests_time;
+log_t current_log_no = DEBUG;
 
-// Verifies the request sent by a client, like headers(data requested)
+pthread_mutex_t lock_requests_mtx = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock_size_mtx     = PTHREAD_MUTEX_INITIALIZER;
+
+static int total_requests;
+static int total_size;
+
+/*
+ *
+ * Sets the type of the log that is goind to be
+ *  used, the DEBUG log is the predefined log type
+ *
+ */
+void set_log(const char * log_name)
+{
+	if(strstr(log_name,"DEBUG")   || strstr(log_name,"debug"))   current_log_no = DEBUG;
+	else   current_log_no = atoi(log_name);
+}
+/*
+ * Gets the log id
+ */
+
+int get_log_id()
+{
+	return current_log_no;
+}
+/*
+ * Prints the log in terminal
+ */
+int print_log(log_t log_level,char * fmt, ...)
+{
+	if(log_level > get_log_id())
+		return 0;
+	int print_count;
+	va_list myargs;
+	va_start(myargs,fmt);
+	print_count = vfprintf(stderr,fmt,myargs);
+	va_end(myargs);
+	return print_count;
+}
+
+/*
+ * Boolean function that verifies if the file exists
+ */
+
+
+void increment_request()
+{
+//	pthread_mutex_lock(&lock_requests_mtx);
+	total_requests++;
+//	pthread_mutex_unlock(&lock_requests_mtx);
+}
+
+int show_total_requests()
+{
+	return total_requests;
+}
+
+int check_file_exists(const char * path)
+{
+	FILE * fp;
+	if(fp=fopen(path,"r"))
+	{
+		fclose(fp);
+		return 1;
+	}
+	return 0;
+}
+
+/*
+ * Obtains the size of the file
+ */
+int file_size(const char *path)
+{
+	if(!check_file_exists(path)) exit(0);
+
+	struct stat st;
+	stat(path,&st);
+	return st.st_size;
+}
+/*
+ * Checks if the folder is a proper file system
+ */
+
+int check_folder_exists(const char *path)
+{
+	struct stat st;
+	if(lstat(path,&st)<0)
+	{	print_log(ERROR,"ROOT DIRECTORY DOES NOT EXISTS");
+		return 0;
+	}
+	if(S_ISDIR(st.st_mode))
+		return 1;
+}
+
+/*
+ *
+ * Set the index of the server as the file index.html
+ */
+
+int set_index(char *path)
+{
+	struct stat st;
+	if(lstat(path,&st)<0)
+	{	perror("");
+		return -1;
+	}
+	if(S_ISDIR(st.st_mode))  strcat(path,"/index.html");
+	return 1;
+}
+
+/*
+ * Extracts the specified file of the url made by the client
+ */
+void trim_resource(char * resource_location)
+{
+	if(strstr(resource_location,"#")) strcpy(strpbrk(resource_location,"#"),"");
+	if(strstr(resource_location,"?")) strcpy(strpbrk(resource_location,"?"),"");
+}
+
+
+void add_to_total_size(int new_size)
+{
+	total_size += new_size;
+}
+
+
+/*
+ *
+ *
+ * Verifies the request sent by a client, like headers(data requested)
+ *
+ *
+ */
 static int verify_request(int fd,http_request_t *request)
 {
 	char   command_line  [MAX_HEADER_LINE_LENGTH];
@@ -44,7 +173,7 @@ static int verify_request(int fd,http_request_t *request)
 
 		if(strcmp(method,"GET")==0)
 		{
-			request->method = HTTP_METHOD_GET;
+			request->method        = HTTP_METHOD_GET;
 			trim_resource(payload_source);
 			strcpy(request->uri,payload_source);
 			request->major_version = major_version;
@@ -52,8 +181,9 @@ static int verify_request(int fd,http_request_t *request)
 		}
 		else
 		{
-			request->method = HTTP_STATUS_NOT_IMPLEMENTED;
+			request->method        = HTTP_STATUS_NOT_IMPLEMENTED;
 		}
+
 
 	}
 	while(head_count < MAX_HEADERS)
@@ -77,9 +207,11 @@ static int verify_request(int fd,http_request_t *request)
 }
 
 /*
+ *
  * Sets the values of the header of the request
  *  that is going to be sent back to the client
  */
+
 
 static int set_headerValues(http_response_t *response,const char *name,const char *value)
 {
@@ -88,7 +220,11 @@ static int set_headerValues(http_response_t *response,const char *name,const cha
 	return 1;
 }
 
-// Function that handles the error of the request.
+/*
+ *
+ *
+ * Function that handles the error of the request.
+ */
 
 static int handle_error(http_status_t status,char * error_resource)
 {
@@ -111,7 +247,12 @@ static int handle_error(http_status_t status,char * error_resource)
 	return 0;
 }
 
-// Verifies if the requested file exists, and builds the response 
+/*
+ *
+ * Verifies if the requested file exists, and builds the response depending
+ * of this criteria
+ *
+ */
 
 static http_status_t check_response_status(const int status,const char * path)
 {
@@ -120,9 +261,14 @@ static http_status_t check_response_status(const int status,const char * path)
 	return HTTP_STATUS_LOOKUP[HTTP_STATUS_OK];
 }
 
+
+
 /*
  * Method that returns the type of header of the html reponse depending
  * of the requested file
+ *
+ *
+ *
  */
 
 const char* getFileExtension(const char *path)
@@ -157,11 +303,13 @@ const char* getFileExtension(const char *path)
 	if(strstr(path,".OGG" ) || strstr(path,".ogg" )) return "audio/ogg";
 	if(strstr(path,".WAV" ) || strstr(path,".wav" )) return "audio/mp3";
 	if(strstr(path,".OPUS") || strstr(path,".opus")) return "audio/oggg";
-		
-	return "text/html"; //Default return index.html
+
+	return "text/html";
 }
 
+
 /*
+ *
  * Basically builds the header of the response that is going
  * to be sent to the client
  *
@@ -196,7 +344,11 @@ static int build_response(const http_request_t *request,http_response_t *respons
 	return 1;
 }
 
-// Prepares the file that is going to be sent
+/*
+ * Prepares the file that is going to be sent
+ *
+ */
+
 
 static int send_response(int fd,const http_response_t *response)
 {
@@ -214,6 +366,7 @@ static int send_response(int fd,const http_response_t *response)
 		fprintf(fp,"%s: %s\r\n",response->headers[head_no].field_name,response->headers[head_no].field_value);
 	}
 	fprintf(fp,"\n");
+	//sleep(1);                             //test parallel implementation
 	fr=fopen(response->resource_path,"r");  //print payload
 	if(fr)
 	{
@@ -224,7 +377,11 @@ static int send_response(int fd,const http_response_t *response)
 	return 1;
 }
 
-// Clears the header for the next response
+
+/*
+ * Clears the header for the next response
+ *
+ */
 
 static int clear_responses(http_response_t *response)
 {
@@ -242,6 +399,8 @@ static int clear_responses(http_response_t *response)
  * Request administrator function
  * Calls all the functions required to make the response to the client
  */
+
+
 
  static int next_request(int fd,http_request_t *request)
 {
@@ -271,7 +430,7 @@ static int clear_responses(http_response_t *response)
 		}
 		else
 		{
-			request->method = HTTP_STATUS_NOT_IMPLEMENTED;
+			request->method        = HTTP_STATUS_NOT_IMPLEMENTED;
 		}
 	}
 	while(head_count < MAX_HEADERS)
@@ -288,6 +447,7 @@ static int clear_responses(http_response_t *response)
 		else 
 			break;
 	}
+
 	request->header_count=head_count;
 	fclose(fr);
 	increment_request();
@@ -298,6 +458,7 @@ static int clear_responses(http_response_t *response)
 
 static void manage_single_request(int peer_sfd)
 {
+
 	http_request_t  *request  = (http_request_t*)malloc(sizeof(http_request_t));	
 	http_response_t *response = (http_response_t*)malloc(sizeof(http_response_t));	
 	strcpy(response->resource_path,path_root);
@@ -309,13 +470,19 @@ static void manage_single_request(int peer_sfd)
 	clear_responses(response);
 	free(request);
 	free(response);	
+
 }
 
-//Create the process for each request
+
+
+/*
+ *
+ * Create the process for each request
+ */
 
 static void perform_serially(int sfd)
 {
-	print_log(DEBUG,"Sequential Version");
+	print_log(DEBUG,"Sequencial Version");
 	while(status_on)
 	{
 		int peer_sfd = accept(sfd,NULL,NULL);                           
@@ -331,8 +498,9 @@ static void perform_serially(int sfd)
 	}
 }
 
-//  Initialize the sockets of the server
-
+/*
+ * Initialize the sockets of the server
+ */
 
 int initialize_server()
 {
@@ -358,7 +526,7 @@ int initialize_server()
 
 	if(bind(sfd, (struct sockaddr*) &myaddr, sizeof(myaddr)) == -1)
 	{
-		print_log(ERROR,"Port not found:");
+		print_log(ERROR,"Puerto no encontrado:");
 		exit(0);
 	}
 	if(listen(sfd,BACKLOG)==-1)
@@ -367,7 +535,9 @@ int initialize_server()
 	return sfd;
 }
 
-//  Configure the parameters of the server like path of the files, etc
+/*
+ * Configure the parameters of the server like path of the files, etc
+ */
 
 strategy_t configure_server(int argc,char *argv[])
 {
@@ -393,9 +563,9 @@ strategy_t configure_server(int argc,char *argv[])
 
 	return operation;
 }
-
-// Main function that calls all the functions required to create server
-
+/*
+ * Main function that calls all the functions required to create server
+ */
 int main(int argc,char *argv[])
 {
 	strategy_t server_operation;
@@ -403,7 +573,7 @@ int main(int argc,char *argv[])
 	server_operation = (strategy_t)configure_server(argc,argv);
 	sfd              = initialize_server();
 	server_operation(sfd);  				//start server
-	if(close(sfd)==-1)					    //close server
+	if(close(sfd)==-1)					//close server
 		print_log(WARNING,"\nError while closing");
 
 	return 0;
