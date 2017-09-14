@@ -474,6 +474,73 @@ static void listen_forked(int sfd) {
 	}
 }
 
+static void listen_preforked(int sfd){
+	//forks amount
+	int forks_amt = pre_amt;
+	//actual child
+	int act_child = 0;
+	//process id
+	pid_t pid;
+
+	//initializes the forks
+	for(int i =0; i < forks_amt; i++){
+		//creates a child
+		pid = fork();
+		if(pid < 0){
+			perror("forks fails");
+			exit(1);
+		}else if(pid == 0){
+			pid = i;
+			break;
+		}
+	}
+
+	if(pid > forks_amt){
+		while(status_on){
+			//obtains the sockect conection
+			int peer_sfd = accept(sfd,NULL,NULL);
+			//if the conections fails
+			if(peer_sfd == -1){
+				continue;
+			}
+			pid = fork();
+			//if fork fails
+			if(pid < 0){
+        perror("Error on fork");
+        exit(1);
+			}
+			else if(pid == 0){
+				close(sfd);
+				forked_request(peer_sfd);
+			}else{
+				close(peer_sfd);
+			}
+		}
+		close(sfd);
+	}
+
+	while(status_on){
+		//obtains the sockect conection
+		int peer_sfd = accept(sfd,NULL,NULL);
+		//if the conections fails
+		if(peer_sfd == -1){
+			continue;
+		}
+		if(pid == act_child){
+			forked_request(peer_sfd);
+		}
+		close(peer_sfd);
+		act_child++;
+		if(act_child >= forks_amt){
+			act_child = 0;
+		}
+	}
+
+	close(sfd);
+
+	exit(0);
+}
+
 //Function to be called by a thread when executed
 void *manage_request_thread(void *v_ptr){
 	//Cast the void pointer to int
@@ -695,9 +762,9 @@ strategy_t configure_server(int argc,char *argv[], int *pre_amt)
 			break;
 		case 'd':
 			//Set function pointer to pre-forked version
-			//operation = &listen_preforked;
+			operation = &listen_preforked;
 			//Set fork amount
-			//*pre_amt = atoi(optarg);
+			*pre_amt = atoi(optarg);
 			strcpy(strategy_name,"Preforked");
 			port_number = PREFORKED_PORT_NUMBER; //port
 			break;
