@@ -1,0 +1,10 @@
+pin 1234
+move 0,1
+touch
+move 2,2
+touch
+move 2,3
+move 2,0
+tam 1,2		
+push 5
+pin 4321
