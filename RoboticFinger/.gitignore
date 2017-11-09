@@ -1,0 +1,12 @@
+#generado por el make del driver
+driver/.tmp_versions/**
+
+driver/*arduino_driver.ko*
+
+driver/*arduino_driver.mod*
+
+driver/*arduino_driver.o*
+
+driver/Module.symvers
+
+driver/modules.order
