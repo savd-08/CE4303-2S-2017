@@ -1,5 +1,0 @@
-.tmp_versions/**
-
-!arduino_driver.c
-
-!Makefile
