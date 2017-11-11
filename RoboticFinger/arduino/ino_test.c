@@ -13,7 +13,7 @@ typedef struct point {
 } point_struct;
 
 int main(int argc, char const *argv[]) {
-  device = fopen("/dev/arduino2","r+");
+  device = fopen("/dev/arduino0","r+");
 
   point_struct point_s;
 
@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]) {
 
   if(device != NULL){
 
-      fwrite(&point_s, sizeof(struct point), 1, device);
+      fwrite((const void *) &point_s, sizeof(point_struct), 1, device);
 
       fclose(device);
   }

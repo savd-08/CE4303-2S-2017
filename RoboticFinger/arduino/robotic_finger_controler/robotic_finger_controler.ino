@@ -23,7 +23,7 @@ Servo servoY;
 Servo servoZ;
 
 /* actual point */
-point_struct * actual_pos;
+point_struct *actual_pos;
 
 int struct_size = (int) sizeof(struct point);
 
@@ -58,7 +58,7 @@ uint8_t Zpos = 0;
  ***********************/
 void setup() {
   //  Setup
-  Serial.begin( 115200 );
+  Serial.begin(9600);
   //  Attach servos
   servoX.attach( SERVOPINX );
   servoY.attach( SERVOPINY );

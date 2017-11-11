@@ -9,7 +9,7 @@
 #include <linux/uaccess.h>
 
 #define USB_ROBOTICFINGER_VENDOR_ID	0x2341	     // The vendor ID
-#define USB_ROBOTICFINGER_PRODUCT_ID	0x0043	     // The Device ID
+#define USB_ROBOTICFINGER_PRODUCT_ID	0x0001	     // The Device ID
 
 MODULE_LICENSE("GPL");                       // The license type
 MODULE_AUTHOR("CE3102");                       // The author
