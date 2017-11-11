@@ -32,7 +32,7 @@ void push(uint8_t time){
 	//Open port file
 	device = fopen(port,"r+");
 	//Sets z axis to touch the screen
-	point p = {.x = current_x, .y = current_y, .z = 50};
+	point p = {.x = current_x, .y = current_y, .z = Z_TOUCH};
 	if(device != NULL){
 		//Send coordinates 
 		fwrite((const void *) &p, sizeof(point), 1, device);
@@ -53,12 +53,12 @@ void touch(){
 	//Open port file
 	device = fopen(port,"r+");
 	//Sets z axis to touch the screen
-	point p = {.x = current_x, .y = current_y, .z = 50};
+	point p = {.x = current_x, .y = current_y, .z = Z_TOUCH};
 	if(device != NULL){
 		//Send coordinates 
 		fwrite((const void *) &p, sizeof(point), 1, device);
 		//Very small delay and move finger up
-		usleep(150000);
+		usleep(TOUCH_TIME);
 		p.z = 0;
 		fwrite((const void *) &p, sizeof(point), 1, device);
 		fclose(device);

@@ -9,6 +9,8 @@
 
 #define M_PI  3.14159265358979323846
 #define GEAR_D  56
+#define TOUCH_TIME 250000
+#define Z_TOUCH 20
 
 FILE * device;   
 char *port;
