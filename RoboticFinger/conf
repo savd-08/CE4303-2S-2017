@@ -1,4 +1,4 @@
-pin 1234
+pin 123456
 move 60,45
 touch
 move 10,0
@@ -7,4 +7,4 @@ move 90,70
 move 10,70
 tam 45,80		
 push 5
-pin 4321
+pin 432122

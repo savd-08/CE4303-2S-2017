@@ -123,10 +123,11 @@ pin:
 //Enters a pin automatically
 void enter_pin(int pin){
 	char pin_buffer[7];
-	sprintf(pin_buffer,"%ld", pin);
+	sprintf(pin_buffer,"%d", pin);
 	for(int i = 0; i < 6; i++){
 		int digit = pin_buffer[i] - '0';
-		move_deg(kb[kb_size][digit][0], kb[kb_size][digit][0]);
+		//printf("%d, %d\n", kb[kb_size-1][digit][0], kb[kb_size-1][digit][1]);
+		move_deg(kb[kb_size-1][digit][0], kb[kb_size-1][digit][1]);
 		touch();
 		usleep(250000);
 	}
