@@ -1,5 +1,8 @@
 #include "robotic_lib.h"
 
+uint8_t current_x = 0;
+uint8_t current_y = 0;
+
 //Set port file
 int set_port(char *port_a){
 	//Open port file
@@ -29,14 +32,12 @@ void push(uint8_t time){
 	//Open port file
 	device = fopen(port,"r+");
 	//Sets z axis to touch the screen
-	point p = {.x = 1, .y = 1, .z = 50};
+	point p = {.x = current_x, .y = current_y, .z = 50};
 	if(device != NULL){
 		//Send coordinates 
 		fwrite((const void *) &p, sizeof(point), 1, device);
 		//Delay and move finger up
-		sleep(time);
-		p.x = 1; 
-		p.y = 1; 
+		sleep(time); 
 		p.z = 0;
 		fwrite((const void *) &p, sizeof(point), 1, device);
 		fclose(device);
@@ -52,14 +53,12 @@ void touch(){
 	//Open port file
 	device = fopen(port,"r+");
 	//Sets z axis to touch the screen
-	point p = {.x = 1, .y = 1, .z = 50};
+	point p = {.x = current_x, .y = current_y, .z = 50};
 	if(device != NULL){
 		//Send coordinates 
 		fwrite((const void *) &p, sizeof(point), 1, device);
 		//Very small delay and move finger up
-		usleep(250000);
-		p.x = 1; 
-		p.y = 1; 
+		usleep(150000);
 		p.z = 0;
 		fwrite((const void *) &p, sizeof(point), 1, device);
 		fclose(device);
@@ -80,6 +79,8 @@ void move(float pos_x, float pos_y){
 		//Send coordinates
 		fwrite((const void *) &p, sizeof(point), 1, device);
 		fclose(device);
+		current_x = p.x;
+		current_y = p.y;
 	}
 	else 
 	{
@@ -97,6 +98,8 @@ void move_deg(int pos_x, int pos_y){
 		//Send coordinates
 		fwrite((const void *) &p, sizeof(point), 1, device);
 		fclose(device);
+		current_x = p.x;
+		current_y = p.y;
 	}
 	else 
 	{
