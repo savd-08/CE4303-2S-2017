@@ -23,6 +23,7 @@ int set_port(char *port_a);
 void push(uint8_t time);
 void touch();
 void move(float pos_x, float pos_y);
+void move_deg(int pos_x, int pos_y);
 int mm2deg(float mm);
 
 #endif

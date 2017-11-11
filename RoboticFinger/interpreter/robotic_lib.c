@@ -57,7 +57,7 @@ void touch(){
 		//Send coordinates 
 		fwrite((const void *) &p, sizeof(point), 1, device);
 		//Very small delay and move finger up
-		usleep(50000);
+		usleep(250000);
 		p.x = 1; 
 		p.y = 1; 
 		p.z = 0;
@@ -86,3 +86,21 @@ void move(float pos_x, float pos_y){
 		printf("I/O Error\n");
 	}
 }
+
+//Moves the finger to the given coordinates
+void move_deg(int pos_x, int pos_y){
+	//Open port file
+	device = fopen(port,"r+");
+	//Set X,Y coordinates to move the finger to
+	point p = {.x = pos_x, .y = pos_y, .z = 0};
+	if(device != NULL){
+		//Send coordinates
+		fwrite((const void *) &p, sizeof(point), 1, device);
+		fclose(device);
+	}
+	else 
+	{
+		printf("I/O Error\n");
+	}
+}
+

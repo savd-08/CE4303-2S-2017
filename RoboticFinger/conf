@@ -1,10 +1,10 @@
 pin 1234
-move 0,1
+move 60,45
 touch
-move 2,2
+move 10,0
 touch
-move 2,3
-move 2,0
-tam 1,2		
+move 90,70
+move 10,70
+tam 45,80		
 push 5
 pin 4321

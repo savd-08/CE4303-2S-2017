@@ -15,11 +15,12 @@ FILE *err_log;		//Error log
 
 int line_no = 1;	//Line being analyzed
 int t = 0;			// Time to be pushed the current position
-int curr_x = 0;		// Current x coordinate
-int curr_y = 0;		// Current y coordinate
 int x = 0;			// x coordinate of the matrix
 int y = 0;			// y coordenate of the matrix
 int p = 0;			// Pin to dial
+int kb_size = 1;	//Keyboard size, default 1x1cm
+
+const int kb [3][10][2] = {{{95,70},{40,100},{40,70},{40,40},{58,100},{58,70},	{58,40},{76,100},{76,70},{76,40}},{{140,65},{20,130},{20,65},{20,20},{60,130},{60,65},{60,20},{100,130},{100,65},{100,20}},{{180,70},{0,150},{0,70},{0,0},{60,150},{60,70},{60,0},{120,150},{120,70},{120,0}}};
 
 %}
 
@@ -77,7 +78,11 @@ instr_move:
 	;
 
 instr_pin:
-	INST_PIN pin				{printf("PIN %d\n", p);}
+	INST_PIN pin				{if(p < 100000 || p > 999999){
+									yyerror("PIN must be 6 digits long.");
+								 }else {
+									enter_pin(p);
+								 }}
 	;
 
 instr_tam:
@@ -90,9 +95,8 @@ time:
 
 x_target:
 	NUM					{
-							curr_x = x;
 							x = $<ival>1;
-						 	if (x > 2)
+						 	if (x > 120)
 							{
 								yyerror("Invalid X coordinate");
 								x = 0;
@@ -102,9 +106,8 @@ x_target:
 
 y_target:
 	NUM					{
-							curr_y = y;
 							y = $<ival>1;
-						 	if (y > 3)
+						 	if (y > 90)
 							{
 								yyerror("Invalid Y coordinate");
 								y = 0;
@@ -116,6 +119,18 @@ pin:
 	NUM					{p = $<ival>1;}
 	;
 %%
+
+//Enters a pin automatically
+void enter_pin(int pin){
+	char pin_buffer[7];
+	sprintf(pin_buffer,"%ld", pin);
+	for(int i = 0; i < 6; i++){
+		int digit = pin_buffer[i] - '0';
+		move_deg(kb[kb_size][digit][0], kb[kb_size][digit][0]);
+		touch();
+		usleep(250000);
+	}
+}
 
 //Reports errors in the error log
 void yyerror(const char *s) 
@@ -140,9 +155,6 @@ int main(int argc, char **argv)
 
 	//Config file name
 	char *conf_fn = NULL;
-
-	//Keyboard size, default 1x1cm
-	int kb_size = 1;
 
 	//Standard getopt() program options parsing
 	opterr = 0;
