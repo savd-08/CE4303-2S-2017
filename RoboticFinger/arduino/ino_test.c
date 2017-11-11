@@ -17,8 +17,8 @@ int main(int argc, char const *argv[]) {
 
   point_struct point_s;
 
-  point_s.x = 40;
-  point_s.y = 40;
+  point_s.x = 1;
+  point_s.y = 1;
   point_s.z = 0;
 
   if(device != NULL){
