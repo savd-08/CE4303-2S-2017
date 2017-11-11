@@ -4,7 +4,7 @@ CFLAGS = -I ../include
 LFLAGS = 
 
 roboticFinger: lex.yy.c sim.tab.c
-	$(CC) $(CFLAGS) -g -w lex.yy.c sim.tab.c -o roboticFinger $(LFLAGS)
+	$(CC) $(CFLAGS) -g -w robotic_lib.c lex.yy.c sim.tab.c  -o roboticFinger $(LFLAGS)
 
 sim.tab.c: roboticFinger.y
 	yacc -b sim -d roboticFinger.y

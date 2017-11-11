@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-//#include <arduino_com.h>
+#include "robotic_lib.h"
 
 //Flex/Bison external variables
 extern int yylex();
@@ -25,7 +25,7 @@ int p = 0;			// Pin to dial
 
 %union {int ival; char *string;};
 
-//Grammar toknes
+//Grammar tokens
 %start program
 %token INST_MOVE
 %token INST_PIN
@@ -56,26 +56,24 @@ instruction:
 	;
 
 instr_touch:
-	INST_TOUCH				{printf("TOUCH\n");}
+	INST_TOUCH				{touch();}
 	;
 
 instr_push:
 	INST_PUSH time				{
-							if (t > 30)
+							if (t > 255)
 							{
-								yyerror("Push time cannot exceed 30 seconds");							
+								yyerror("Push time cannot exceed 255 seconds");							
 							}
 							else
 							{
-								printf("PUSH ON\n");
-								sleep(t);
-								printf("PUSH OFF\n");
+								push(t);
 							}							
 						}
 	;
 
 instr_move:
-	INST_MOVE x_target ',' y_target 		{printf("MOVE %d, %d\n", x, y);}
+	INST_MOVE x_target ',' y_target 		{move(x, y);}
 	;
 
 instr_pin:
@@ -83,7 +81,7 @@ instr_pin:
 	;
 
 instr_tam:
-	INST_TAM x_target ',' y_target 		{printf("TOUCH & MOVE %d, %d\n", x, y);}
+	INST_TAM x_target ',' y_target 		{touch();move(x,y);}
 	;
 
 time:
@@ -202,6 +200,11 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
+	//Finish if fopen errors
+	if(!set_port(port)){
+		return -1;
+	}
+	
 	//Open the error log
 	err_log = fopen("error_log.txt", "w");
 
