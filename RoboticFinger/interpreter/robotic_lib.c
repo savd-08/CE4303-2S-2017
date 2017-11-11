@@ -29,7 +29,7 @@ void push(uint8_t time){
 	//Open port file
 	device = fopen(port,"r+");
 	//Sets z axis to touch the screen
-	point p = {.x = 0, .y = 0, .z = 120};
+	point p = {.x = 1, .y = 1, .z = 50};
 	if(device != NULL){
 		//Send coordinates 
 		fwrite((const void *) &p, sizeof(point), 1, device);
@@ -52,7 +52,7 @@ void touch(){
 	//Open port file
 	device = fopen(port,"r+");
 	//Sets z axis to touch the screen
-	point p = {.x = 0, .y = 0, .z = 120};
+	point p = {.x = 1, .y = 1, .z = 50};
 	if(device != NULL){
 		//Send coordinates 
 		fwrite((const void *) &p, sizeof(point), 1, device);
