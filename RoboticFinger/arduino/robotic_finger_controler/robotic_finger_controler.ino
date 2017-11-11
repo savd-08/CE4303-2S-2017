@@ -11,11 +11,11 @@ drop a finger
 #define LINE_BUFFER_LENGTH 512
 
 /* Structures, global variables */
-struct point {
-  float x;
-  float y;
-  float z;
-};
+typedef struct point {
+  uint8_t x;
+  uint8_t y;
+  uint8_t z;
+} point_struct;
 
 /* Naming servos */
 Servo servoX;
@@ -23,12 +23,16 @@ Servo servoY;
 Servo servoZ;
 
 /* actual point */
-struct point actuatorPos;
+point_struct * actual_pos;
 
+int struct_size = (int) sizeof(struct point);
+
+/*
 //  Gear settings
 float gearD = 56;
-float ZgearD = 13.3239;
+float ZgearD = 13.3239;*/
 
+/*
 //  Drawing robot limits, in degrees
 float Xdmin = 17;   //  8.31mm
 float Xdmax = 171;  //  83.57mm
@@ -43,11 +47,11 @@ float Xmax = deg2mm(Xdmax);
 float Ymin = deg2mm(Ydmin);
 float Ymax = deg2mm(Ydmax);
 float Zmin = Zdmin;
-float Zmax = Zdmax;
+float Zmax = Zdmax;*/
 
-float Xpos = Xdmin;
-float Ypos = Ydmin;
-float Zpos = Zmax;
+uint8_t Xpos = 0;
+uint8_t Ypos = 0;
+uint8_t Zpos = 0;
 
 /**********************
  * void setup() - Initialisations
@@ -64,7 +68,7 @@ void setup() {
   servoY.write(Ypos);
   servoZ.write(Zpos);
   //  Notifications!!!
-  Serial.println(" degrees");
+  /*Serial.println(" degrees");
   Serial.print("X range is from ");
   Serial.print(Xmin);
   Serial.print(" to ");
@@ -74,20 +78,53 @@ void setup() {
   Serial.print(Ymin);
   Serial.print(" to ");
   Serial.print(Ymax);
-  Serial.println(" mm.");
-}
-
-void loop(){
+  Serial.println(" mm.");*/
 }
 
 /******************************************************
-Functions for Calculating Useful Stuff
+Serial read and moving determination
 ******************************************************/
+
+void loop(){
+
+  if(Serial.available()){
+    //in buffer
+    char serial_buffer [struct_size];
+    //Serial read
+    Serial.readBytes(serial_buffer, struct_size);
+    //convertion to a point struct
+    actual_pos = (point_struct*) &serial_buffer;
+    //move the finger
+    if(actual_pos->z == 0 && actual_pos->x != 1 && actual_pos->y != 1){
+      Xpos = actual_pos->x;
+      Ypos = actual_pos->y;
+      Zpos = actual_pos->z;
+      writeServo();
+    } else if(actual_pos->x == 1 && actual_pos->y == 1) {
+      Zpos = actual_pos->z;
+      writeServo();
+    }
+
+  }
+
+}
+
+/******************************************************
+Function for moving the figner
+******************************************************/
+
+void writeServo(){
+  servoX.write(Xpos);
+  servoY.write(Ypos);
+  servoZ.write(Zpos);
+}
+
+
 //  Converts mm to degrees for the servos
-float mm2deg(float mm) {
+/*float mm2deg(float mm) {
   return mm/PI/gearD*360;
 }
 //  Converts mm to degrees for the servos
 float deg2mm(float deg) {
   return PI*gearD*deg/360;
-}
+}*/
